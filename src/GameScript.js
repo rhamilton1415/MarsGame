@@ -25,8 +25,8 @@ var gfx_backgroundParallax_YLocation = 0;
 var gfx_backgroundImgParallaxForeground_YLocation = 0;
 var twk_gfx_background_ScrollSpeed = 5;
 
-//Input Keys : [Left, Right, Up, Down, Space]
-var keys = [false, false, false, false, false];
+//Input Keys : [Left, Right, Up, Down, Space, Enter]
+var keys = [false, false, false, false, false, false];
 
 /**********************************************************************************************************************************************
 /************* Character Section **************************************************************************************************************
@@ -273,6 +273,7 @@ var AI_asteroid_gfx_asteroidImage = new Image();
 
 function AI_Init()
 {
+	var twk_AI_asteroid_updateSpeed = 7.5;
 	AI_asteroid_active = [0,0,0,0,0];
 	AI_asteroid_spawnCounter = twk_AI_asteroid_minimumSpawnTime;
 }
@@ -442,7 +443,7 @@ function score_UpdateScore()
 /************* Game Systems ******************************************************************************************************************
 /****																																	   ****
 /*********************************************************************************************************************************************/
-var twk_levelTimeLength = 100;
+var twk_levelTimeLength = 10;
 
 var trigger = false;
 var past = false;
@@ -459,18 +460,19 @@ function InitGame()
 function UpdateLevelTimer()
 {
 	levelTimer += (1/fps);
-	if( levelTimer >= twk_levelTimeLength )
+	if( levelTimer % twk_levelTimeLength ==0)
 	{
-		State_Game_ToEndGame();
+		twk_AI_asteroid_updateSpeed += 0.5;
+		//State_Game_ToEndGame();
 	}
-	else if( levelTimer > (twk_levelTimeLength - twk_cutscene_storm_timeBeforeEndStormAppears))
-	{
-		if( !cutscene_storm_shouldDrawStorm )
-		{
-			CutScene_Storm_PlayScene();
-		}
-		CutScene_Storm_GameStateUpdate();
-	}
+	// else if( levelTimer > (twk_levelTimeLength - twk_cutscene_storm_timeBeforeEndStormAppears)&&false)//nah
+	// {
+		// if( !cutscene_storm_shouldDrawStorm )
+		// {
+			// CutScene_Storm_PlayScene();
+		// }
+		// CutScene_Storm_GameStateUpdate();
+	// }
 }
 
 function updateInputs()
@@ -790,11 +792,11 @@ function DrawEndGame()
 		{
 		    EndGame_timer += (1/fps);
 		}
-		else if((EndGame_timer*100) < score_currentScore)
+		else if((EndGame_timer*300) < score_currentScore)
 		{
 			//Print a counting score
 		    EndGame_timer += (1/fps);
-			OutPutString = "SCORE: " + Math.round(EndGame_timer*100);
+			OutPutString = "SCORE: " + Math.round(EndGame_timer*300);
 			XPos = canvas.width/2;
 			XPos -= 120;
 			ctx.fillStyle = "#DAF7A6";
@@ -818,6 +820,11 @@ function DrawEndGame()
 			ctx.fillStyle = "#DAF7A6";
 			ctx.font="40px Helvetica";
 			ctx.fillText(OutPutString, XPos, (canvas.height/2)+50);
+			
+			if( keys[5]&&State_gameState==2) //Enter Pressed
+			{
+				State_Game_ToPreGame();
+			}
 		}
 	}
 	
@@ -839,7 +846,6 @@ function State_Update()
 	case 1 : State_Game_Update(); break;
 	case 2 : State_EndGame_Update(); break;
 	};
-	console.log(char_position[0] + "+" + char_position[1]);
 }
 
 //Update states
@@ -958,7 +964,7 @@ function DrawScene()
 	{
 		DrawLightningStorm();
 	}
-	if( State_gameState == 1)
+	if( State_gameState == 1) //playing
 	{
 		DrawActors();
 		Char_DrawBullets();
@@ -966,11 +972,11 @@ function DrawScene()
 	
 		DrawUI();
 	}
-	else if( State_gameState == 0 )
+	else if( State_gameState == 0 ) //pre game
 	{
 		DrawPreGame();
 	}
-	else if( State_gameState == 2 )
+	else if( State_gameState == 2 ) //dead
 	{
 		DrawEndGame();
 	}
@@ -1003,6 +1009,7 @@ function changeKey(key, flag)
 		case 68: case 39: keys[1] = flag; break; // right
 		case 83: case 40: keys[3] = flag; break; // down
 		case 32: 		  keys[4] = flag;if( flag == 1 && past != flag ){trigger = true;} break;  // space
+		case 13:          keys[5] = flag; break; //enter
 	}
 }
 

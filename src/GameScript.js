@@ -522,13 +522,14 @@ function CheckCollisions()
 			//	char_position[1] + " > " + AI_asteroid_positions[1][index] + " + " + twk_AI_asteroid_hitBox[1] + " && " +
 			//	char_position[1] + " + " + twk_char_hitBox[1] + " < " + AI_asteroid_positions[1][index]	);
 			//}
-			//Check Collision with Ship // maybe add fidelity Tweaks /AABB
+			//Check Collision with Ship - on true goto end state // maybe add fidelity Tweaks /AABB
 			if(	char_position[0] 					  < AI_asteroid_positions[0][index] + newHitBox[0] &&
 				char_position[0] + twk_char_hitBox[0] > AI_asteroid_positions[0][index] 			  				&&
 				char_position[1] 					  < AI_asteroid_positions[1][index] + newHitBox[1] &&
 				char_position[1] + twk_char_hitBox[1] > AI_asteroid_positions[1][index]							  			 ) 
 			{
-				State_Game_ToPreGame();			
+				//State_Game_ToPreGame();	
+				State_Game_ToEndGame();
 			}
 			
 			
@@ -604,7 +605,7 @@ function DrawPreGame()
 	}
 	else
 	{
-			Xpos -= 30;
+		Xpos -= 30;
 		OutPutString = "GO";
 	}
 	
@@ -665,14 +666,17 @@ function CutScene_Storm_EndGameStateUpdate()
 var twk_EndGame_LightningFlashes = 3;
 var twk_EndGame_navSpeed = 5;
 
-var EndGame_lightningFlashAnimAlpha = 0;
+var EndGame_lightningFlashAnimAlpha = 1;
 var EndGame_lightningFlashCount = 0;
 var EndGame_playOutroClip = false;
-
-
+var EndGame_outroEnd = false;
+var EndGame_timer = 0;
+var EndGame_menuSubState = 0;
 function InitEndGame()
 {
+	EndGame_outroEnd = false;
 	EndGame_playOutroClip = false;
+	EndGame_timer = 0;
 }
 
 function UpdateEndGame()
@@ -681,8 +685,11 @@ function UpdateEndGame()
 	if( !EndGame_playOutroClip )
 	{
 		//Navigate
-		var xFound = false;var yFound = false;
-		var canvasXcenter = (canvas.width/2); var canvasYcenter = (canvas.height/2);
+		var xFound = false;
+		var yFound = false;
+		var canvasXcenter = (canvas.width/2); 
+		var canvasYcenter = (canvas.height/2);
+		
 		if( char_position[0] != canvasXcenter  )
 		{
 			//Update XPos> twk_EndGame_navSpeed
@@ -756,14 +763,63 @@ function UpdateEndGame()
 
 function DrawEndGame()
 {
-	Char_DrawCharacter();
-	EndGame_lightningFlashAnimAlpha -= (0.9 * (1/fps));
-		alert(EndGame_lightningFlashAnimAlpha + "PRE"); 
-	if( EndGame_lightningFlashAnimAlpha < 0 )EndGame_lightningFlashAnimAlpha = 1;
-	//Draw Flash
-	ctx.fillStyle = 'rgba(255,255,255,' + EndGame_lightningFlashAnimAlpha + ')';
-	//alert(EndGame_lightningFlashAnimAlpha);
-	ctx.fillRect(0,0,canvas.width,canvas.height);
+	//Char_DrawCharacter();
+	//Flash once then draw text
+	if(!EndGame_outroEnd)
+	{
+	    EndGame_lightningFlashAnimAlpha -= (0.9 * (1/fps)); 
+	    //Draw Flash
+	    ctx.fillStyle = 'rgba(255,255,255,' + EndGame_lightningFlashAnimAlpha + ')';
+	    ctx.fillRect(0,0,canvas.width,canvas.height);
+	    if( EndGame_lightningFlashAnimAlpha < 0 )
+	    {
+	    	EndGame_lightningFlashAnimAlpha = 1;
+	    	EndGame_outroEnd = true;
+	    }
+	}
+	else
+	{
+	    var XPos = canvas.width/2;
+		var OutPutString = "GAME OVER";
+	    XPos -= 170;
+	    ctx.fillStyle = "#DAF7A6";
+	    ctx.font="60px Helvetica";
+	    ctx.fillText(OutPutString, XPos, (canvas.height/2)-50);
+		//add a little artistic flair - "Play again" option is delayed by a second
+		if(EndGame_timer < 1)
+		{
+		    EndGame_timer += (1/fps);
+		}
+		else if((EndGame_timer*100) < score_currentScore)
+		{
+			//Print a counting score
+		    EndGame_timer += (1/fps);
+			OutPutString = "SCORE: " + Math.round(EndGame_timer*100);
+			XPos = canvas.width/2;
+			XPos -= 120;
+			ctx.fillStyle = "#DAF7A6";
+			ctx.font="40px Helvetica";
+			ctx.fillText(OutPutString, XPos, (canvas.height/2));
+		}
+		else
+		{
+			//print a counting score
+			OutPutString = "SCORE: " + score_currentScore;
+			XPos = canvas.width/2;
+			XPos -= 120;
+			ctx.fillStyle = "#DAF7A6";
+			ctx.font="40px Helvetica";
+			ctx.fillText(OutPutString, XPos, (canvas.height/2))
+			
+			//Print an option
+			OutPutString = "PLAY AGAIN?";
+			XPos = canvas.width/2;
+			XPos -= 120;
+			ctx.fillStyle = "#DAF7A6";
+			ctx.font="40px Helvetica";
+			ctx.fillText(OutPutString, XPos, (canvas.height/2)+50);
+		}
+	}
 	
 	
 }
@@ -917,6 +973,14 @@ function DrawScene()
 	else if( State_gameState == 2 )
 	{
 		DrawEndGame();
+	}
+	else if( State_gameState == 3)
+	{
+		//start game
+	}
+	else if (State_gameState == 4)
+	{
+		//death screen? maybe we don't need it 
 	}
 }
 /**********************************************************************************************************************************************

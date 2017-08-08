@@ -279,6 +279,12 @@ var AI_asteroid_positions = [];
 AI_asteroid_positions[0] = [0,0,0,0,0];
 AI_asteroid_positions[1] = [0,0,0,0,0];
 
+var AI_powerup_updateSpeed = 7.5;
+var AI_powerup_minimumSpawnTime = 0.5;
+var AI_powerup_initialSpawnTimer = 10;
+var AI_powerup_hitBox = [50, 50];
+var AI_powerup_animationTimer = 0.1;
+var AI_powerup_exists = false;
 var AI_astroid_Scales = [0,0,0,0,0];
 
 var AI_asteroid_AnimationValue = [];
@@ -286,13 +292,18 @@ AI_asteroid_AnimationValue[0] = [0,0,0,0,0];
 AI_asteroid_AnimationValue[1] = [0,0,0,0,0];
 
 var AI_asteroid_gfx_asteroidImage = new Image();
+var AI_timer = 0;
 
 
 function AI_Init()
 {
-	var twk_AI_asteroid_updateSpeed = 7.5;
+	AI_powerup_exists = false;
+	twk_AI_asteroid_updateSpeed = 7.5;
+	AI_powerup_updateSpeed = 7.5;
 	AI_asteroid_active = [0,0,0,0,0];
+	twk_AI_asteroid_minimumSpawnTime = 0.5;
 	AI_asteroid_spawnCounter = twk_AI_asteroid_minimumSpawnTime;
+	AI_timer = 0;
 }
 
 function AI_SpawnAsteroid( index )
@@ -461,13 +472,14 @@ function score_UpdateScore()
 /****																																	   ****
 /*********************************************************************************************************************************************/
 var twk_levelTimeLength = 5;
-
+var gameTimer = 0;
 var trigger = false;
 var past = false;
 var levelTimer = 0;
 
 function InitGame()
 {
+	gameTimer = 0;
 	levelTimer = 0;
 	Char_Init();
 	AI_Init();
@@ -477,10 +489,13 @@ function InitGame()
 function UpdateLevelTimer()
 {
 	//Every 10 seconds, the asteroids start moving faster
+	gameTimer += (1/fps);
 	levelTimer += (1/fps);
-	if( levelTimer % twk_levelTimeLength == 0)
+	if( levelTimer > twk_levelTimeLength)
 	{
 		twk_AI_asteroid_updateSpeed += 0.5;
+		levelTimer = 0;
+	    if(twk_AI_asteroid_minimumSpawnTime>0)twk_AI_asteroid_minimumSpawnTime -= 0.05;
 		//State_Game_ToEndGame();
 	}
 	// else if( levelTimer > (twk_levelTimeLength - twk_cutscene_storm_timeBeforeEndStormAppears)&&false)//nah
@@ -598,6 +613,8 @@ var preGame_CountDownTimer;
 
 function InitPreGame()
 {
+	sfx_inGame.stop();
+	sfx_inGame.play();
 	preGame_CountDownTimer = twk_preGame_CountDownTimeSecs;
 	if( twk_preGame_READYMESSAGE <= twk_preGame_GOMESSAGE ) alert("INIT PREGAME BROKEN");
 	CutScene_Storm_ResetScene();
@@ -608,8 +625,6 @@ function UpdatePreGameCountDown()
 	preGame_CountDownTimer -= (1/fps);
 	if( preGame_CountDownTimer <= 0 )
 	{
-		sfx_inGame.stop();
-		sfx_inGame.play();
 		State_PreGame_ToGame();
 	}
 }

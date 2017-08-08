@@ -29,6 +29,23 @@ var twk_gfx_background_ScrollSpeed = 5;
 //Input Keys : [Left, Right, Up, Down, Space, Enter]
 var keys = [false, false, false, false, false, false];
 /**********************************************************************************************************************************************
+/************* Audio Variables ****************************************************************************************************************
+/****																																	   ****
+/*********************************************************************************************************************************************/
+
+	var sfx_splash = new Howl({src:["./audio/sfx_splash.wav"],
+	buffer: true,
+	loop: true
+	});
+	var sfx_inGame = new Howl({src:["./audio/sfx_ingame.wav"],
+	buffer: true,
+	loop: true
+	});
+	var sfx_endGame = new Howl({src:["./audio/sfx_endgame.wav"],
+	buffer:true,
+	loop: true
+	});
+/**********************************************************************************************************************************************
 /************* Character Section **************************************************************************************************************
 /****																																	   ****
 /*********************************************************************************************************************************************/
@@ -589,7 +606,12 @@ function InitPreGame()
 function UpdatePreGameCountDown()
 {
 	preGame_CountDownTimer -= (1/fps);
-	if( preGame_CountDownTimer <= 0 )State_PreGame_ToGame();
+	if( preGame_CountDownTimer <= 0 )
+	{
+		sfx_inGame.stop();
+		sfx_inGame.play();
+		State_PreGame_ToGame();
+	}
 }
 
 function DrawPreGame()
@@ -670,6 +692,8 @@ var Start_textFlicker = false;
 var Start_timer = 0;
 function InitStart()
 {
+	//sfx_splash.volume(1);
+	sfx_splash.play();
 	var Start_textFlicker = false;
 	var Start_timer = 0;
 }
@@ -722,6 +746,10 @@ var EndGame_optionFlickerRate = 1.2;
 var EndGame_menuAvailable = false;
 function InitEndGame()
 {
+	sfx_endGame.stop();
+	sfx_endGame.volume(0);
+	sfx_endGame.play();
+	sfx_endGame.fade(0,1,3);
 	EndGame_outroEnd = false;
 	EndGame_playOutroClip = false;
 	EndGame_timer = 0;
@@ -975,6 +1003,8 @@ function State_PreGame_ToGame()
 function State_Game_ToPreGame()
 {
 	// Modify this Later
+	sfx_splash.fade(1,0,1);
+	sfx_endGame.fade(1,0,1);
 	InitPreGame();
 	InitGame();
 	State_gameState = State_gameStates.PREGAME;
@@ -982,6 +1012,7 @@ function State_Game_ToPreGame()
 
 function State_Game_ToEndGame()
 {
+	sfx_inGame.fade(1,0,0.5)
 	InitEndGame();
 	State_gameState = State_gameStates.ENDGAME;	
 }
@@ -992,13 +1023,7 @@ function State_Game_ToEndGame()
 
 function InitSFX()
 {
-	var sfx_splash = new Howl({src:["./audio/sfx_splash.wav"]
-	});
-	var sfx_inGame = new Howl({src:["./audio/sfx_ingame.wav"]
-	});
-	var sfx_endGame = new Howl({src:["./audio/sfx_endgame.wav"]
-	});
-	sfx_splash.play();
+	
 }
 /**********************************************************************************************************************************************
 /************* GRAPHICS METHODS (Must be at Bottom )  *****************************************************************************************
@@ -1147,5 +1172,6 @@ window.onload=function()
 	
 	InitGraphics();
 	InitSFX();
+	InitStart();
 	//State_Game_ToPreGame();
 }

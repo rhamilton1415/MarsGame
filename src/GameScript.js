@@ -443,7 +443,7 @@ function score_UpdateScore()
 /************* Game Systems ******************************************************************************************************************
 /****																																	   ****
 /*********************************************************************************************************************************************/
-var twk_levelTimeLength = 10;
+var twk_levelTimeLength = 5;
 
 var trigger = false;
 var past = false;
@@ -459,8 +459,9 @@ function InitGame()
 
 function UpdateLevelTimer()
 {
+	//Every 10 seconds, the asteroids start moving faster
 	levelTimer += (1/fps);
-	if( levelTimer % twk_levelTimeLength ==0)
+	if( levelTimer % twk_levelTimeLength == 0)
 	{
 		twk_AI_asteroid_updateSpeed += 0.5;
 		//State_Game_ToEndGame();
@@ -672,13 +673,26 @@ var EndGame_lightningFlashAnimAlpha = 1;
 var EndGame_lightningFlashCount = 0;
 var EndGame_playOutroClip = false;
 var EndGame_outroEnd = false;
+//Menu animation variables
+var EndGame_scoreAnimationIncrement = 0;
+var EndGame_scoreAnimationSubScore = 0;
 var EndGame_timer = 0;
 var EndGame_menuSubState = 0;
+var EndGame_menuSubStates = 
+{
+	START_OVER : 0,
+	POST_SCORE : 1
+}
+var EndGame_optionFlicker = false;
+var EndGame_optionFlickerRate = 1.2;
 function InitEndGame()
 {
 	EndGame_outroEnd = false;
 	EndGame_playOutroClip = false;
 	EndGame_timer = 0;
+	EndGame_ScoreAnimationIncrement = (((score_currentScore/10)/fps) * Math.log(score_currentScore)); //NLogN used to make higher scores last longer but not overly so
+    EndGame_scoreAnimationSubScore = 0;
+	EndGame_optionFlicker = false;
 }
 
 function UpdateEndGame()
@@ -783,44 +797,59 @@ function DrawEndGame()
 	{
 	    var XPos = canvas.width/2;
 		var OutPutString = "GAME OVER";
-	    XPos -= 170;
 	    ctx.fillStyle = "#DAF7A6";
 	    ctx.font="60px Helvetica";
+	    XPos -= (ctx.measureText(OutPutString).width/2); //The offset is set to half the size of the string in pixels, centering it
 	    ctx.fillText(OutPutString, XPos, (canvas.height/2)-50);
-		//add a little artistic flair - "Play again" option is delayed by a second
+		//add a little artistic flair - "Score" display delayed by a second
 		if(EndGame_timer < 1)
 		{
 		    EndGame_timer += (1/fps);
 		}
-		else if((EndGame_timer*300) < score_currentScore)
+		else if((EndGame_scoreAnimationSubScore) < score_currentScore) //Score Animation
 		{
 			//Print a counting score
-		    EndGame_timer += (1/fps);
-			OutPutString = "SCORE: " + Math.round(EndGame_timer*300);
+			EndGame_scoreAnimationSubScore += EndGame_ScoreAnimationIncrement;
+			OutPutString = "SCORE: " + Math.round(EndGame_scoreAnimationSubScore);
 			XPos = canvas.width/2;
-			XPos -= 120;
 			ctx.fillStyle = "#DAF7A6";
 			ctx.font="40px Helvetica";
-			ctx.fillText(OutPutString, XPos, (canvas.height/2));
+			XPos -= (ctx.measureText(OutPutString).width/2);
+			ctx.fillText(OutPutString, XPos, (canvas.height/2)+250);
 		}
-		else
+		else //Menu
 		{
+			//yeah kinda hacky 
+		    EndGame_timer += (1/fps);
+			if(EndGame_timer>EndGame_optionFlickerRate)
+			{
+				EndGame_timer = 1;
+				EndGame_optionFlicker = (EndGame_optionFlicker ? false : true);
+			}
 			//print a counting score
 			OutPutString = "SCORE: " + score_currentScore;
 			XPos = canvas.width/2;
-			XPos -= 120;
 			ctx.fillStyle = "#DAF7A6";
 			ctx.font="40px Helvetica";
-			ctx.fillText(OutPutString, XPos, (canvas.height/2))
+			XPos -= (ctx.measureText(OutPutString).width/2);
+			ctx.fillText(OutPutString, XPos, (canvas.height/2)+250)
 			
-			//Print an option
+			//Print Option one
 			OutPutString = "PLAY AGAIN?";
 			XPos = canvas.width/2;
-			XPos -= 120;
-			ctx.fillStyle = "#DAF7A6";
+			ctx.fillStyle = ((EndGame_menuSubState == EndGame_menuSubStates.START_OVER&&EndGame_optionFlicker) ? "#C20E00" : "#DAF7A6");
+			//ctx.fillStyle = "#DAF7A6";
 			ctx.font="40px Helvetica";
-			ctx.fillText(OutPutString, XPos, (canvas.height/2)+50);
+			XPos -= (ctx.measureText(OutPutString).width/2);
+			ctx.fillText(OutPutString, XPos, (canvas.height/2));
 			
+			//Print an option
+			OutPutString = "SAVE HIGH-SCORE";
+			XPos = canvas.width/2;
+			ctx.fillStyle = ((EndGame_menuSubState == EndGame_menuSubStates.POST_SCORE && EndGame_optionFlicker) ? "#C20E00" : "#DAF7A6");
+			ctx.font="40px Helvetica";
+			XPos -= (ctx.measureText(OutPutString).width/2);
+			ctx.fillText(OutPutString, XPos, (canvas.height/2)+50);
 			if( keys[5]) //Enter Pressed
 			{
 				State_Game_ToPreGame();

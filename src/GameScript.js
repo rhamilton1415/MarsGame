@@ -821,7 +821,7 @@ function DrawEndGame()
 			ctx.font="40px Helvetica";
 			ctx.fillText(OutPutString, XPos, (canvas.height/2)+50);
 			
-			if( keys[5]&&State_gameState==2) //Enter Pressed
+			if( keys[5]) //Enter Pressed
 			{
 				State_Game_ToPreGame();
 			}
@@ -837,14 +837,19 @@ function DrawEndGame()
 /*********************************************************************************************************************************************/
 //0 PreGame, 1 InGame, 2 End Game
 var State_gameState = 0;
-
+var State_gameStates = 
+{
+	PREGAME : 0,
+	GAME : 1,
+	ENDGAME : 2
+}
 function State_Update()
 {
 	switch( State_gameState )
 	{
-	case 0 : State_PreGame_Update(); break;
-	case 1 : State_Game_Update(); break;
-	case 2 : State_EndGame_Update(); break;
+	case State_gameStates.PREGAME : State_PreGame_Update(); break;
+	case State_gameStates.GAME : State_Game_Update(); break;
+	case State_gameStates.ENDGAME : State_EndGame_Update(); break;
 	};
 }
 
@@ -869,7 +874,7 @@ function State_EndGame_Update()
 //PREGAME
 function State_PreGame_ToGame()
 {
-	State_gameState = 1;
+	State_gameState = State_gameStates.GAME;
 }
 
 //GAME
@@ -878,13 +883,13 @@ function State_Game_ToPreGame()
 	// Modify this Later
 	InitPreGame();
 	InitGame();
-	State_gameState = 0;
+	State_gameState = State_gameStates.PREGAME;
 }
 
 function State_Game_ToEndGame()
 {
 	InitEndGame();
-	State_gameState = 2;	
+	State_gameState = State_gameStates.ENDGAME;	
 }
 /**********************************************************************************************************************************************
 /************* GRAPHICS METHODS (Must be at Bottom )  *****************************************************************************************
@@ -972,11 +977,11 @@ function DrawScene()
 	
 		DrawUI();
 	}
-	else if( State_gameState == 0 ) //pre game
+	else if( State_gameState == State_gameStates.PREGAME ) //pre game
 	{
 		DrawPreGame();
 	}
-	else if( State_gameState == 2 ) //dead
+	else if( State_gameState == State_gameStates.ENDGAME ) //dead
 	{
 		DrawEndGame();
 	}

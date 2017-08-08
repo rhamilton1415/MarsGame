@@ -17,6 +17,7 @@ var ctx;
 var fps = 60;
 
 //Background Variables
+var gfx_splashImg = new Image();
 var gfx_backgroundImg = new Image();
 var gfx_backgroundImgParallax = new Image();
 var gfx_backgroundImgParallaxForeground = new Image();
@@ -661,7 +662,41 @@ function CutScene_Storm_EndGameStateUpdate()
 		cutscene_storm_Yposition = 0;
 	}
 }
-
+/**********************************************************************************************************************************************
+/************* Start Game State ***************************************************************************************************************
+/****																																	   ****
+/*********************************************************************************************************************************************/
+var Start_textFlickerRate = 0.2;
+var Start_textFlicker = false;
+var Start_timer = 0;
+function InitStart()
+{
+	var Start_textFlicker = false;
+	var Start_timer = 0;
+}
+function UpdateStart()
+{
+	Start_timer += (1/fps);
+	if(Start_timer>Start_textFlickerRate)
+	{
+		(Start_textFlicker ? Start_textFlicker = false : Start_textFlicker = true);
+		Start_timer = 0;
+	}
+	if( keys[5]) //Enter Pressed
+	{
+		State_Game_ToPreGame();
+	}
+}
+function DrawStart()
+{
+	ctx.drawImage(gfx_splashImg, 0, 0, canvas.width, canvas.height);
+	OutPutString = "PRESS ENTER TO START";
+	XPos = canvas.width/2;
+	ctx.fillStyle = ((Start_textFlicker) ? "#C20E00" : "#DAF7A6");
+	ctx.font="40px Helvetica";
+	XPos -= (ctx.measureText(OutPutString).width/2);
+	ctx.fillText(OutPutString, XPos, (canvas.height/2)+280)
+}
 /**********************************************************************************************************************************************
 /************* End Game State *****************************************************************************************************************
 /****																																	   ****
@@ -685,6 +720,7 @@ var EndGame_menuSubStates =
 }
 var EndGame_optionFlicker = false;
 var EndGame_optionFlickerRate = 1.2;
+var EndGame_menuAvailable = false;
 function InitEndGame()
 {
 	EndGame_outroEnd = false;
@@ -693,6 +729,7 @@ function InitEndGame()
 	EndGame_ScoreAnimationIncrement = (((score_currentScore/10)/fps) * Math.log(score_currentScore)); //NLogN used to make higher scores last longer but not overly so
     EndGame_scoreAnimationSubScore = 0;
 	EndGame_optionFlicker = false;
+	EndGame_menuAvailable = false;
 }
 
 function UpdateEndGame()
@@ -775,6 +812,31 @@ function UpdateEndGame()
 	}
 	//Has clip Finished
 	CutScene_Storm_EndGameStateUpdate()
+	if(EndGame_menuAvailable)
+	{
+		if( keys[5]) //Enter Pressed
+		{
+			switch(EndGame_menuSubState)
+			{
+				case EndGame_menuSubStates.START_OVER: State_Game_ToPreGame(); break;
+				case EndGame_menuSubStates.POST_SCORE: /*todo*/; break;
+			}
+		}
+		else if(keys[2]) //up
+		{
+			if(EndGame_menuSubState > 0) 
+			{
+				EndGame_menuSubState--;
+			}
+		}
+		else if(keys[3]) //down
+		{
+			if(EndGame_menuSubState < Object.keys(EndGame_menuSubStates).length/2)
+			{
+				EndGame_menuSubState++;
+			}
+		}
+	}
 }
 
 function DrawEndGame()
@@ -793,7 +855,7 @@ function DrawEndGame()
 	    	EndGame_outroEnd = true;
 	    }
 	}
-	else
+	else //Start drawing the menu
 	{
 	    var XPos = canvas.width/2;
 		var OutPutString = "GAME OVER";
@@ -819,6 +881,7 @@ function DrawEndGame()
 		}
 		else //Menu
 		{
+			EndGame_menuAvailable = true;
 			//yeah kinda hacky 
 		    EndGame_timer += (1/fps);
 			if(EndGame_timer>EndGame_optionFlickerRate)
@@ -837,7 +900,7 @@ function DrawEndGame()
 			//Print Option one
 			OutPutString = "PLAY AGAIN?";
 			XPos = canvas.width/2;
-			ctx.fillStyle = ((EndGame_menuSubState == EndGame_menuSubStates.START_OVER&&EndGame_optionFlicker) ? "#C20E00" : "#DAF7A6");
+			ctx.fillStyle = ((EndGame_menuSubState == EndGame_menuSubStates.START_OVER && EndGame_optionFlicker) ? "#C20E00" : "#DAF7A6");
 			//ctx.fillStyle = "#DAF7A6";
 			ctx.font="40px Helvetica";
 			XPos -= (ctx.measureText(OutPutString).width/2);
@@ -850,10 +913,6 @@ function DrawEndGame()
 			ctx.font="40px Helvetica";
 			XPos -= (ctx.measureText(OutPutString).width/2);
 			ctx.fillText(OutPutString, XPos, (canvas.height/2)+50);
-			if( keys[5]) //Enter Pressed
-			{
-				State_Game_ToPreGame();
-			}
 		}
 	}
 	
@@ -865,12 +924,13 @@ function DrawEndGame()
 /****																																	   ****
 /*********************************************************************************************************************************************/
 //0 PreGame, 1 InGame, 2 End Game
-var State_gameState = 0;
+var State_gameState = 3;
 var State_gameStates = 
 {
 	PREGAME : 0,
 	GAME : 1,
-	ENDGAME : 2
+	ENDGAME : 2,
+	START : 3
 }
 function State_Update()
 {
@@ -879,6 +939,7 @@ function State_Update()
 	case State_gameStates.PREGAME : State_PreGame_Update(); break;
 	case State_gameStates.GAME : State_Game_Update(); break;
 	case State_gameStates.ENDGAME : State_EndGame_Update(); break;
+	case State_gameStates.START : State_Start_Update(); break;
 	};
 }
 
@@ -896,6 +957,11 @@ function State_PreGame_Update()
 function State_EndGame_Update()
 {
 	UpdateEndGame();
+}
+
+function State_Start_Update()
+{
+	UpdateStart();
 }
 
 //Switch States
@@ -927,6 +993,7 @@ function State_Game_ToEndGame()
 
 function InitGraphics()
 {
+	gfx_splashImg.src = "./img/bgImage_splash.png";
 	gfx_backgroundImg.src = "./img/bgImage_space.png"; //does this cache can we speed this up
 	gfx_backgroundImgParallax.src = "./img/bgImage_StarsParallax.png"; //does this cache can we speed this up
 	gfx_backgroundImgParallaxForeground.src = "./img/bgImage_StarsParallaxForeground.png"; //does this cache can we speed this up
@@ -968,7 +1035,6 @@ function DrawBackground()
 	
 	ctx.drawImage(gfx_backgroundImgParallaxForeground, 0, gfx_backgroundImgParallaxForeground_YLocation, canvas.width, canvas.height);
 	ctx.drawImage(gfx_backgroundImgParallaxForeground, 0, gfx_backgroundImgParallaxForeground_YLocation - canvas.height, canvas.width, canvas.height);
-	
 }
 
 function DrawActors()
@@ -993,12 +1059,17 @@ function DrawUI()
 function DrawScene()
 {
 	//Add This to State
-	DrawBackground();
-	if( cutscene_storm_shouldDrawStorm )
+	// if( cutscene_storm_shouldDrawStorm )
+	// {
+		// DrawLightningStorm();
+	// }
+	if(State_gameState == State_gameStates.START) //Splash - don't draw everything else in this state
 	{
-		DrawLightningStorm();
+		DrawStart();
+		return;
 	}
-	if( State_gameState == 1) //playing
+	DrawBackground();
+	if( State_gameState == State_gameStates.GAME) //playing
 	{
 		DrawActors();
 		Char_DrawBullets();
@@ -1013,14 +1084,6 @@ function DrawScene()
 	else if( State_gameState == State_gameStates.ENDGAME ) //dead
 	{
 		DrawEndGame();
-	}
-	else if( State_gameState == 3)
-	{
-		//start game
-	}
-	else if (State_gameState == 4)
-	{
-		//death screen? maybe we don't need it 
 	}
 }
 /**********************************************************************************************************************************************
@@ -1038,6 +1101,7 @@ function changeKey(key, flag)
 {
 	switch (key)
 	{
+		//0, 2, 1, 3, 4 god fucking dammit sam
 		case 65: case 37: keys[0] = flag; break; // left
 		case 87: case 38: keys[2] = flag; break; // up
 		case 68: case 39: keys[1] = flag; break; // right
@@ -1068,6 +1132,5 @@ window.onload=function()
 	setInterval(engineUpdate, 1000/fps);
 	
 	InitGraphics();
-	InitGame();
-	InitPreGame();
+	//State_Game_ToPreGame();
 }

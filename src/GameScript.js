@@ -1,6 +1,6 @@
 /**
  * Rosie The Band Logo Game(v.1.0)
- * by Sam Frederick Collier
+ * by Sam Frederick Collier and Robert Hamilton
  * Copyright (c) 2011 
  * All rights reserved.
  * Resdistrubtion is allowed providing this Banner is kept. 

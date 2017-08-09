@@ -1,5 +1,19 @@
-var connect = require('connect');
-var serveStatic = require('serve-static');
-connect().use(serveStatic(__dirname)).listen(8080, function(){
-    console.log('Server running on 8080...');
+const http = require('http');
+const express = require('express');
+const app = express();
+const port = 80;
+
+app.get('/',(request,response)=>
+{
+	response.send('hi');
+});
+
+
+app.listen(port,(err) =>
+{
+	if(err)
+	{
+		return console.log('err',err);
+	}
+	console.log('listening on ${port}');
 });

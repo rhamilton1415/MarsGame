@@ -15,12 +15,13 @@
 var canvas;
 var ctx;
 var fps = 60;
-
+var clickables =[];
 //Background Variables
 var gfx_splashImg = new Image();
 var gfx_backgroundImg = new Image();
 var gfx_backgroundImgParallax = new Image();
 var gfx_backgroundImgParallaxForeground = new Image();
+
 var gfx_background_YLocation = 0;
 var gfx_backgroundParallax_YLocation = 0;
 var gfx_backgroundImgParallaxForeground_YLocation = 0;
@@ -32,16 +33,30 @@ var keys = [false, false, false, false, false, false];
 /************* Audio Variables ****************************************************************************************************************
 /****																																	   ****
 /*********************************************************************************************************************************************/
-
-	var sfx_splash = new Howl({src:["./audio/sfx_splash.wav"],
+	var gfx_sfx_toggleOnImg = new Image();
+	var gfx_sfx_toggleOffImg = new Image();
+	var sfx_toggleButtonBox = [50,50];
+	var gfx_sfx_togglePosition = [0,0]
+	var sfx_On = true; //use as volume meter
+	var sfx_Volume = 1; //keep normalised
+	
+	var gfx_music_toggleOnImg = new Image();
+	var gfx_music_toggleOffImg = new Image();
+	music_toggleButtonBox = [50,50];
+	var gfx_music_togglePosition = [0,0];
+	var music_On = true;
+	var music_Volume = 1;
+	
+	var music_splash = new Howl({src:["./audio/music_splash.wav"],
 	buffer: true,
 	loop: true
 	});
-	var sfx_inGame = new Howl({src:["./audio/sfx_ingame.wav"],
+	music_splash.on('pause',function(){music_splash.stop();});
+	var music_inGame = new Howl({src:["./audio/music_inGame.wav"],
 	buffer: true,
 	loop: true
 	});
-	var sfx_endGame = new Howl({src:["./audio/sfx_endgame.wav"],
+	var music_endGame = new Howl({src:["./audio/music_endGame.wav"],
 	buffer:true,
 	loop: true
 	});
@@ -730,8 +745,8 @@ var preGame_CountDownTimer;
 
 function InitPreGame()
 {
-	sfx_inGame.stop();
-	sfx_inGame.play();
+	music_inGame.stop();
+	music_inGame.play();
 	preGame_CountDownTimer = twk_preGame_CountDownTimeSecs;
 	if( twk_preGame_READYMESSAGE <= twk_preGame_GOMESSAGE ) alert("INIT PREGAME BROKEN");
 	CutScene_Storm_ResetScene();
@@ -824,8 +839,11 @@ var Start_textFlicker = false;
 var Start_timer = 0;
 function InitStart()
 {
-	//sfx_splash.volume(1);
-	sfx_splash.play();
+	//music_splash.volume(1);
+	if(music_On)
+	{
+		music_splash.play();
+	}
 	var Start_textFlicker = false;
 	var Start_timer = 0;
 }
@@ -878,10 +896,9 @@ var EndGame_optionFlickerRate = 1.2;
 var EndGame_menuAvailable = false;
 function InitEndGame()
 {
-	sfx_endGame.stop();
-	sfx_endGame.volume(0);
-	sfx_endGame.play();
-	sfx_endGame.fade(0,1,3);
+	music_endGame.play();
+	music_endGame.volume(music_Volume);
+	music_endGame.fade(0,music_Volume,3);
 	EndGame_outroEnd = false;
 	EndGame_playOutroClip = false;
 	EndGame_timer = 0;
@@ -1077,6 +1094,37 @@ function DrawEndGame()
 	
 	
 }
+/**********************************************************************************************************************************************
+/************* Global Input *******************************************************************************************************************
+/****																																	   ****
+/*********************************************************************************************************************************************/
+//input handling outside of game logic
+function UI_init()
+{
+	//Clickable format = [box[minx,miny,maxx,maxy],function onBoxClick()] hacky and shit sorry i didn't want it to be this way
+	clickables = 
+	[
+		[[gfx_sfx_togglePosition[0], gfx_sfx_togglePosition[1], gfx_sfx_togglePosition[0]+sfx_toggleButtonBox[0], gfx_sfx_togglePosition[1]+sfx_toggleButtonBox[1]],function(){ToggleSFX();}], //sfx toggle box
+		[[gfx_music_togglePosition[0], gfx_music_togglePosition[1], (gfx_music_togglePosition[0]+music_toggleButtonBox[0]), (gfx_music_togglePosition[1]+music_toggleButtonBox[1])],function(){ToggleMusic();}] //music toggle box
+	];
+}
+function UI_Update()
+{
+}
+function UI_LeftClick(e)
+{
+	var rect = canvas.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var y = e.clientY - rect.top;
+	for( var index = 0; index < clickables.length; ++index ) //clickables box is topx, topy, bottomx, bottomy, function
+	{
+		var currentObj=clickables[index][0];
+		if(x > currentObj[0] && x < currentObj[2] && y > currentObj[1] && y < currentObj[3])
+		   {
+			   clickables[index][1]();
+		   }
+	}
+}
 
 /**********************************************************************************************************************************************
 /************* State Machine ******************************************************************************************************************
@@ -1135,8 +1183,10 @@ function State_PreGame_ToGame()
 function State_Game_ToPreGame()
 {
 	// Modify this Later
-	sfx_splash.fade(1,0,1);
-	sfx_endGame.fade(1,0,1);
+	//music_splash.fade(music_Volume,0,1);
+	music_splash.stop();
+	//music_endGame.fade(music_Volume,0,1);
+	music_endGame.stop();
 	InitPreGame();
 	InitGame();
 	State_gameState = State_gameStates.PREGAME;
@@ -1144,7 +1194,8 @@ function State_Game_ToPreGame()
 
 function State_Game_ToEndGame()
 {
-	sfx_inGame.fade(1,0,0.5)
+	//music_inGame.fade(music_Volume,0,0.5)
+	music_inGame.stop();
 	InitEndGame();
 	State_gameState = State_gameStates.ENDGAME;	
 }
@@ -1155,7 +1206,54 @@ function State_Game_ToEndGame()
 
 function InitSFX()
 {
-	
+}
+function ToggleSFX()
+{
+	if(sfx_On)
+	{
+		sfx_On = false;
+		sfx_Volume = 0;
+		InitSFX();
+		sfx_asteroidExplode.volume(sfx_Volume);
+		sfx_shot.volume(sfx_Volume);
+		sfx_powerupGet.volume(sfx_Volume);
+	}
+	else
+	{
+		sfx_On = true;
+		sfx_Volume = 1;
+		InitSFX();
+		sfx_asteroidExplode.volume(sfx_Volume);
+		sfx_shot.volume(sfx_Volume);
+		sfx_powerupGet.volume(sfx_Volume);
+	}
+}
+function ToggleMusic()
+{
+	if(music_On)
+	{
+		music_On = false;
+		music_Volume = 0;
+		InitSFX();
+		music_inGame.volume(music_Volume);
+		music_endGame.volume(music_Volume);
+		music_splash.volume(music_Volume);
+	}
+	else
+	{
+		music_On = true;
+		music_Volume = 1;
+		music_inGame.volume(music_Volume); 
+		music_endGame.volume(music_Volume);
+		music_splash.volume(music_Volume);
+		// switch( State_gameState )
+		// {
+			// case State_gameStates.PREGAME : music_inGame.volume(music_Volume); break;
+			// case State_gameStates.GAME : music_inGame.volume(music_Volume); break;
+			// case State_gameStates.ENDGAME : music_endGame.volume(music_Volume); break;
+			// case State_gameStates.START : music_splash.volume(music_Volume); break;
+		// };
+	}
 }
 /**********************************************************************************************************************************************
 /************* GRAPHICS METHODS (Must be at Bottom )  *****************************************************************************************
@@ -1164,6 +1262,11 @@ function InitSFX()
 
 function InitGraphics()
 {
+	gfx_sfx_toggleOnImg.src = "./img/Image_SFXToggleOn.png";
+	gfx_sfx_toggleOffImg.src = "./img/Image_SFXToggleOff.png";
+	gfx_music_toggleOnImg.src = "./img/Image_SFXToggleOn.png";
+	gfx_music_toggleOffImg.src = "./img/Image_SFXToggleOff.png";
+	
 	gfx_splashImg.src = "./img/bgImage_splash.png";
 	gfx_backgroundImg.src = "./img/bgImage_space.png"; //does this cache can we speed this up
 	gfx_backgroundImgParallax.src = "./img/bgImage_StarsParallax.png"; //does this cache can we speed this up
@@ -1173,6 +1276,11 @@ function InitGraphics()
 	AI_asteroid_gfx_asteroidImage.src = "./img/Sprite_asteroid.png";
 	AI_powerup_gfx_powerupImage.src = "./img/Image_powerup.png";
 	cutscene_gfx_stormImage.src = "./img/bgImage_Storm.png";
+	
+	gfx_sfx_togglePosition = [10, (canvas.height - sfx_toggleButtonBox[1]) - 10];
+	gfx_music_togglePosition = [10, (canvas.height - (2*music_toggleButtonBox[1])) - 20];
+	
+	
 }
 
 function DrawLightningStorm()
@@ -1214,6 +1322,25 @@ function DrawActors()
 	Char_DrawCharacter();
 }
 
+function DrawSFXToggle()
+{
+	if(sfx_On)
+	{
+		ctx.drawImage(gfx_sfx_toggleOnImg,gfx_sfx_togglePosition[0],gfx_sfx_togglePosition[1],sfx_toggleButtonBox[0],sfx_toggleButtonBox[1]);
+	}
+	else
+	{
+		ctx.drawImage(gfx_sfx_toggleOffImg,gfx_sfx_togglePosition[0],gfx_sfx_togglePosition[1],sfx_toggleButtonBox[0],sfx_toggleButtonBox[1]);
+	}
+	if(music_On)
+	{
+		ctx.drawImage(gfx_sfx_toggleOnImg,gfx_music_togglePosition[0],gfx_music_togglePosition[1],sfx_toggleButtonBox[0],sfx_toggleButtonBox[1]);
+	}
+	else
+	{
+		ctx.drawImage(gfx_sfx_toggleOffImg,gfx_music_togglePosition[0],gfx_music_togglePosition[1],sfx_toggleButtonBox[0],sfx_toggleButtonBox[1]);
+	}
+}
 function DrawUI()
 {
 	//Can Fire 	ctx.fillStyle = 'rgba(0,0,0,0)';
@@ -1237,28 +1364,32 @@ function DrawScene()
 	// {
 		// DrawLightningStorm();
 	// }
+	
 	if(State_gameState == State_gameStates.START) //Splash - don't draw everything else in this state
 	{
 		DrawStart();
-		return;
 	}
-	DrawBackground();
-	if( State_gameState == State_gameStates.GAME) //playing
+	else
 	{
-		DrawActors();
-		Char_DrawBullets();
-		AI_Asteroid_DrawAsteroid();
-		AI_powerup_DrawPowerup();
-		DrawUI();
+		DrawBackground();
+		if( State_gameState == State_gameStates.GAME) //playing
+		{
+			DrawActors();
+			Char_DrawBullets();
+			AI_Asteroid_DrawAsteroid();
+			AI_powerup_DrawPowerup();
+			DrawUI();
+		}
+		else if( State_gameState == State_gameStates.PREGAME ) //pre game
+		{
+			DrawPreGame();
+		}
+		else if( State_gameState == State_gameStates.ENDGAME ) //dead
+		{
+			DrawEndGame();
+		}
 	}
-	else if( State_gameState == State_gameStates.PREGAME ) //pre game
-	{
-		DrawPreGame();
-	}
-	else if( State_gameState == State_gameStates.ENDGAME ) //dead
-	{
-		DrawEndGame();
-	}
+	DrawSFXToggle(); //always present
 }
 /**********************************************************************************************************************************************
 /************* ENGINE METHODS (Must be at Bottom )  *******************************************************************************************
@@ -1268,12 +1399,13 @@ function engineUpdate()
 {
 	State_Update();
 	DrawScene();
+	UI_Update();
 	if( trigger == true ) { trigger = false; }
 }
 
-function changeKey(key, flag)
+function changeKey(e, flag)
 {
-	switch (key)
+	switch (e.keyCode)
 	{
 		//0, 2, 1, 3, 4 god fucking dammit sam
 		case 65: case 37: keys[0] = flag; break; // left
@@ -1282,6 +1414,7 @@ function changeKey(key, flag)
 		case 83: case 40: keys[3] = flag; break; // down
 		case 32: 		  keys[4] = flag;if( flag == 1 && past != flag ){trigger = true;} break;  // space
 		case 13:          keys[5] = flag; break; //enter
+		case 1:           UI_LeftClick(e); break; //left click
 	}
 }
 
@@ -1296,8 +1429,9 @@ function painter()
 
 /*** Game Initialisation ***/
 //Register Call Backs
-document.onkeydown=function(e){changeKey((e||window.event).keyCode, 1);}
-document.onkeyup=function(e){changeKey((e||window.event).keyCode, 0);}
+document.onkeydown=function(e){changeKey((e||window.event), 1);}
+document.onkeyup=function(e){changeKey((e||window.event), 0);}
+document.onmousedown=function(e){UI_LeftClick(e);}
 
 window.onload=function()
 {
@@ -1307,6 +1441,7 @@ window.onload=function()
 	
 	InitGraphics();
 	InitSFX();
+	UI_init();
 	InitStart();
 	//State_Game_ToPreGame();
 }

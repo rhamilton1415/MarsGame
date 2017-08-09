@@ -55,9 +55,11 @@ var twk_char_hitBox = [57, 88];
 var twk_char_maxSpeed = [10, 10];
 var twk_char_dampeningValue = 20;
 
+
 var char_playerImpulse = [0, 0];
 var char_currentSpeed = [0, 0];
 var char_position = [0, 0];
+var char_health = 0;
 
 var char_gfx_characterSprite = new Image();//Make this a Sprite
 
@@ -87,7 +89,7 @@ function Char_Init()
 	char_currentSpeed = [0, 0];
 	char_position[0] = (canvas.width/2);
 	char_position[1] = (canvas.height - twk_char_bullet_hitBox[1] - 10);
-	
+	char_health = 0;
 	//Reset Bullets
 	twk_char_bullets_Active = [false,false,false,false,false,false,false,false,false,false];	
 }
@@ -96,6 +98,25 @@ function Char_AddImpulse( x, y )
 {
 	char_playerImpulse[0] += x;
 	char_playerImpulse[1] += y;
+}
+function Char_Damage()
+{ 
+	char_health--;
+	if(char_health<0)State_Game_ToEndGame();
+
+}
+/**
+*@param {!AI_powerups} the type of powerup to be applied
+*/
+function Char_applyPowerup(p)
+{
+	//TODO this
+	switch(p)
+	{
+		case 0:break;
+		case 1:char_health++;break;
+		case 2:break;
+	}
 }
 
 function Char_RequestFireBullet()
@@ -278,20 +299,32 @@ var AI_asteroid_spawnCounter = 0;
 var AI_asteroid_positions = [];
 AI_asteroid_positions[0] = [0,0,0,0,0];
 AI_asteroid_positions[1] = [0,0,0,0,0];
+var AI_astroid_Scales = [0,0,0,0,0];
 
+//powerups - from a GD perspective having more than one at any time would be chaotic so for the moment it's only coded for one at a time
+var AI_powerup_SUPERPHYSICS = true; //real trajectories have curves but may be performance intensive
 var AI_powerup_updateSpeed = 7.5;
-var AI_powerup_minimumSpawnTime = 0.5;
+var AI_powerup_minimumSpawnTime = 1000;
 var AI_powerup_initialSpawnTimer = 10;
 var AI_powerup_hitBox = [50, 50];
+var AI_powerup_position = [0,0];
+var AI_powerup_vector = [0,0];
 var AI_powerup_animationTimer = 0.1;
 var AI_powerup_exists = false;
-var AI_astroid_Scales = [0,0,0,0,0];
+var AI_powerup = 1;
+var AI_powerups = 
+{
+	INVUL: 0,
+	EXTRA_LIFE: 1,
+	EXTRA_SHOT: 2
+}
 
 var AI_asteroid_AnimationValue = [];
 AI_asteroid_AnimationValue[0] = [0,0,0,0,0];
 AI_asteroid_AnimationValue[1] = [0,0,0,0,0];
 
 var AI_asteroid_gfx_asteroidImage = new Image();
+var AI_powerup_gfx_powerupImage = new Image();
 var AI_timer = 0;
 
 
@@ -305,7 +338,93 @@ function AI_Init()
 	AI_asteroid_spawnCounter = twk_AI_asteroid_minimumSpawnTime;
 	AI_timer = 0;
 }
-
+/**
+ * This function will spawn a powerup on a random side of the canvas and point it at a random point on the opposite side of the canvas
+ */
+function AI_SpawnPowerup()
+{
+	//TODO different powerup types
+	AI_powerup = 1;
+	//Determine which side and where the powerup will spawn from
+	var spawnPosition = [0,0];
+	var seedSpawnBorder = (Math.random() * 2)
+	if(seedSpawnBorder <1) //Spawn right
+	{
+		spawnPosition[0] = canvas.width;
+		spawnPosition[1] = AI_getRandomCoordinate(canvas.height-AI_powerup_hitBox[1]);
+		AI_powerup_vector[0] = -AI_powerup_hitBox[0]-spawnPosition[0];
+		AI_powerup_vector[1] = -AI_getRandomCoordinate(canvas.height-AI_powerup_hitBox[1])-spawnPosition[1];
+	}
+	else if(seedSpawnBorder <=2) //spawn left
+	{
+		spawnPosition[0] = -AI_powerup_hitBox[0];
+		spawnPosition[1] = AI_getRandomCoordinate(canvas.height-AI_powerup_hitBox[1]);
+		AI_powerup_vector[0] = canvas.width-spawnPosition[0];
+		AI_powerup_vector[1] = AI_getRandomCoordinate(canvas.height-AI_powerup_hitBox[1])-spawnPosition[1];
+	}
+	//convert the vector into a normalized value 
+	var vector = Math.sqrt((Math.pow(AI_powerup_vector[0],2)) + (Math.pow(AI_powerup_vector[1],2)));
+	AI_powerup_vector[0] = AI_powerup_vector[0]/vector;
+	AI_powerup_vector[1] = AI_powerup_vector[1]/vector;
+	AI_powerup_position = spawnPosition;
+	AI_powerup_exists = true;
+}
+/**
+ * This function takes a cap and returns a random value within that range. 
+ * While this function doesn't really do much it'll make it easier to add weightings in future
+ * @param {!Number} the maximum return value
+ * @return {!Number} a value between 0 and the given parameter
+ */
+function AI_getRandomCoordinate(fromZeroTo)
+{
+	return fromZeroTo * Math.random();
+}
+/**
+ * If the powerup is active and within the bounds of the canvas this function will move it along its vector
+ */
+function AI_powerup_update()
+{
+	if(AI_powerup_exists)
+	{
+		//Check will only fail when considerably outside the canvas to avoid instantly failing this check on spawn
+		//TODO make this less fucking stupid
+		if((AI_powerup_position[1] < canvas.height + AI_powerup_hitBox[1]) &&
+		(AI_powerup_position[1] > -(2*AI_powerup_hitBox[1])) &&
+		(AI_powerup_position[0] < canvas.width + AI_powerup_hitBox[0]) &&
+		(AI_powerup_position[0] > -(2*AI_powerup_hitBox[0])))
+		{
+			AI_powerup_position[0] += (AI_powerup_vector[0]*AI_powerup_updateSpeed);
+			AI_powerup_position[1] += (AI_powerup_vector[1]*AI_powerup_updateSpeed);
+			if(AI_powerup_SUPERPHYSICS)
+			{
+				//curves the trajectory into the standard asteroid path
+				AI_powerup_vector[1] += twk_AI_asteroid_updateSpeed/1000;
+				var vector = Math.sqrt((Math.pow(AI_powerup_vector[0],2)) + (Math.pow(AI_powerup_vector[1],2)));
+				AI_powerup_vector[0] = AI_powerup_vector[0]/vector;
+				AI_powerup_vector[1] = AI_powerup_vector[1]/vector;
+			}
+		}
+		else
+		{
+			AI_powerup_initialSpawnTimer = AI_powerup_minimumSpawnTime;
+			AI_powerup_exists = false;
+		}
+	}
+	else
+	{
+		AI_powerup_initialSpawnTimer--;
+		if(AI_powerup_initialSpawnTimer <0)
+		{
+			AI_SpawnPowerup();
+		}
+	}
+}
+function AI_onPowerupGet()
+{
+	AI_powerup_initialSpawnTimer = AI_powerup_minimumSpawnTime;
+	AI_powerup_exists = false;
+	Char_applyPowerup(AI_powerup);
+}
 function AI_SpawnAsteroid( index )
 {
 	// make the init values tweakable
@@ -314,7 +433,7 @@ function AI_SpawnAsteroid( index )
 	//The keepOnScreenVal ensures that asteroids which would otherwise spawn off the edge of the screen are capped.
 	//This soloution does mean that 6% of asteroids will spawn at this cap as opposed to the ideal 1% so TODO GCSE maths
 	var rawSpawnVal = (seedVal*canvas.width);
-	if( rawSpawnVal > 750 )
+	if( rawSpawnVal > 750 ) //750 = canvas width - asteroid hitbox
 	{
 		keepOnScreenVal = canvas.width - (rawSpawnVal)
 	}
@@ -359,7 +478,7 @@ function AI_AsteroidUpdate()
 		//TODO remove This
 		if( AI_asteroid_active[index] >= 1 && AI_asteroid_positions[1] < 0)
 		{
-			alert( "Broken Asteroid " + index );
+			//alert( "Broken Asteroid " + index );
 		}
 		if( AI_asteroid_active[index] >= 1 )
 		{
@@ -392,24 +511,23 @@ function AI_AsteroidUpdate()
 
 function AI_Update()
 {
-	AI_AsteroidUpdate();	
+	AI_AsteroidUpdate();
+	AI_powerup_update();
 }
 
+function AI_powerup_DrawPowerup()
+{
+	if(AI_powerup_exists)
+	{
+		ctx.drawImage(AI_powerup_gfx_powerupImage,AI_powerup_position[0],AI_powerup_position[1]);
+	}
+}
 function AI_Asteroid_DrawAsteroid()
 {
 	for( var index = 0; index < 5; ++index )
 	{
 		if( AI_asteroid_active[index] != 0 )
 		{
-		//if( AI_asteroid_active[index] == 1 )
-		//{
-		//	//if( AI_asteroid_positions[1][index] < 0)
-		//	//{
-		//	//	//Draw Early Warning	
-		//	//	ctx.fillStyle = "#FF0000";
-		//	//	ctx.fillRect(AI_asteroid_positions[0][index], 25], twk_AI_asteroid_hitBox[0], twk_AI_asteroid_hitBox[1])//15);
-		//	//}
-		//}
 			AI_Asteroid_DrawSingle_Asteroid(index);
 		}
 	}	
@@ -498,14 +616,6 @@ function UpdateLevelTimer()
 	    if(twk_AI_asteroid_minimumSpawnTime>0)twk_AI_asteroid_minimumSpawnTime -= 0.05;
 		//State_Game_ToEndGame();
 	}
-	// else if( levelTimer > (twk_levelTimeLength - twk_cutscene_storm_timeBeforeEndStormAppears)&&false)//nah
-	// {
-		// if( !cutscene_storm_shouldDrawStorm )
-		// {
-			// CutScene_Storm_PlayScene();
-		// }
-		// CutScene_Storm_GameStateUpdate();
-	// }
 }
 
 function updateInputs()
@@ -534,15 +644,7 @@ function updateInputs()
 
 function CheckCollisions()
 {
-	//var char_TopLeft  = [char_position[0]					, char_position[1]					 ]; 
-	//var char_TopRight = [char_position[0] + twk_char_hitBox[0], char_position[1]					 ];
-	//var char_BotLeft  = [char_position[0]					, char_position[1] + twk_char_hitBox[1]];
-	//var char_BotRight = [char_position[0] + twk_char_hitBox[1], char_position[1] + twk_char_hitBox[1]];
-	//var Asteroid_TopLeft  = [AI_asteroid_positions[0][index]							, AI_asteroid_positions[1][index]							 ]; 
-	//var Asteroid_TopRight = [AI_asteroid_positions[0][index] + twk_AI_asteroid_hitBox[0], AI_asteroid_positions[1][index]							 ];
-	//var Asteroid_BotLeft  = [AI_asteroid_positions[0][index]							, AI_asteroid_positions[1][index] + twk_AI_asteroid_hitBox[1]];
-	//var Asteroid_BotRight = [AI_asteroid_positions[0][index]+ twk_AI_asteroid_hitBox[1] , AI_asteroid_positions[1][index] + twk_AI_asteroid_hitBox[1]];
-	
+	//Check Asteroid collisions
 	for( var index = 0; index < 5; ++index )
 	{
 		if( AI_asteroid_active[index] == 1 && AI_asteroid_active[index] != 2)
@@ -550,13 +652,6 @@ function CheckCollisions()
 			var newHitBox = [0,0];
 			newHitBox[0] = twk_AI_asteroid_hitBox[0] * AI_astroid_Scales[index]; 
 			newHitBox[1] = twk_AI_asteroid_hitBox[1] * AI_astroid_Scales[index];
-			//if( trigger == true )
-			//{
-			//	alert( char_position[0] + " < " + AI_asteroid_positions[0][index] + " + " + twk_AI_asteroid_hitBox[0] + " && " + 
-			//	char_position[0] + " + " + twk_char_hitBox[0] + " > " + AI_asteroid_positions[0][index] + " && " +
-			//	char_position[1] + " > " + AI_asteroid_positions[1][index] + " + " + twk_AI_asteroid_hitBox[1] + " && " +
-			//	char_position[1] + " + " + twk_char_hitBox[1] + " < " + AI_asteroid_positions[1][index]	);
-			//}
 			//Check Collision with Ship - on true goto end state // maybe add fidelity Tweaks /AABB
 			if(	char_position[0] 					  < AI_asteroid_positions[0][index] + newHitBox[0] &&
 				char_position[0] + twk_char_hitBox[0] > AI_asteroid_positions[0][index] 			  				&&
@@ -564,7 +659,9 @@ function CheckCollisions()
 				char_position[1] + twk_char_hitBox[1] > AI_asteroid_positions[1][index]							  			 ) 
 			{
 				//State_Game_ToPreGame();	
-				State_Game_ToEndGame();
+				//State_Game_ToEndGame();
+				AI_OnAsteroidDestroyed( index ); //otherwise both die
+				Char_Damage();
 			}
 			
 			
@@ -585,6 +682,19 @@ function CheckCollisions()
 				}
 			}
 		}
+	}
+	//Check Powerup collisions
+	if(AI_powerup_exists)
+	{
+		var newHitBox=[AI_powerup_hitBox[0],AI_powerup_hitBox[1]];//soz laziness TODO not this
+		
+		if(	char_position[0] < AI_powerup_position[0] + newHitBox[0] &&
+				char_position[0] + twk_char_hitBox[0] > AI_powerup_position[0] &&
+				char_position[1] < AI_powerup_position[1] + newHitBox[1] &&
+				char_position[1] + twk_char_hitBox[1] > AI_powerup_position[1]) 
+			{
+				AI_onPowerupGet();
+			}
 	}
 	//if( trigger == true ) { trigger = false; }
 }
@@ -1053,7 +1163,8 @@ function InitGraphics()
 	gfx_backgroundImgParallaxForeground.src = "./img/bgImage_StarsParallaxForeground.png"; //does this cache can we speed this up
 	char_gfx_characterSprite.src = "./img/Sprite_spaceship.png";//"./img/Image_spaceship.png";
 	char_bullets_gfx_bulletImage.src = "./img/Image_spaceshipBullet.png";
-	AI_asteroid_gfx_asteroidImage.src = "./img/Sprite_asteroid.png"
+	AI_asteroid_gfx_asteroidImage.src = "./img/Sprite_asteroid.png";
+	AI_powerup_gfx_powerupImage.src = "./img/Image_powerup.png";
 	cutscene_gfx_stormImage.src = "./img/bgImage_Storm.png";
 }
 
@@ -1108,6 +1219,8 @@ function DrawUI()
 	ctx.font = "20px KulminoituvaRegular";
 	ctx.fillText("Score :", canvas.width - 120, (canvas.height - 65));
 	ctx.fillText(score_currentScore, canvas.width - 100, (canvas.height - 40));
+	ctx.fillText("Health :", canvas.width - 180, (canvas.height - 65));
+	ctx.fillText(char_health, canvas.width - 160, (canvas.height - 40));
 }
 
 function DrawScene()
@@ -1128,7 +1241,7 @@ function DrawScene()
 		DrawActors();
 		Char_DrawBullets();
 		AI_Asteroid_DrawAsteroid();
-	
+		AI_powerup_DrawPowerup();
 		DrawUI();
 	}
 	else if( State_gameState == State_gameStates.PREGAME ) //pre game

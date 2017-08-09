@@ -45,6 +45,10 @@ var keys = [false, false, false, false, false, false];
 	buffer:true,
 	loop: true
 	});
+	var sfx_shot = new Howl({src:["./audio/sfx_shot.wav","./audio/sfx_shot.mp3"]});
+	var sfx_asteroidExplode = new Howl({src:["./audio/sfx_asteroidExplode.wav","./audio/sfx_asteroidExplode.mp3"]});
+	var sfx_powerupGet = new Howl({src:["./audio/sfx_powerupGet.wav","./audio/sfx_powerupGet.mp3"],
+	buffer: true});
 /**********************************************************************************************************************************************
 /************* Character Section **************************************************************************************************************
 /****																																	   ****
@@ -137,6 +141,7 @@ function Char_RequestFireBullet()
 		//Fire Bullet
 		if( indexFound != -1 )
 		{
+			sfx_shot.play();
 			twk_char_bullets_Active[indexFound]	= true;
 			twk_char_bullets_position[0][indexFound] = (char_position[0] + (twk_char_bullet_hitBox[0]/2) + 5);
 			twk_char_bullets_position[1][indexFound] = (char_position[1] + (twk_char_bullet_hitBox[1]/2) + 5);
@@ -421,6 +426,7 @@ function AI_powerup_update()
 }
 function AI_onPowerupGet()
 {
+	sfx_powerupGet.play();
 	AI_powerup_initialSpawnTimer = AI_powerup_minimumSpawnTime;
 	AI_powerup_exists = false;
 	Char_applyPowerup(AI_powerup);
@@ -464,6 +470,7 @@ function AI_UpdateSingleAsteroid( index )
 
 function AI_OnAsteroidDestroyed( index ) 
 {
+	sfx_asteroidExplode.play();
 	AI_asteroid_active[index] = 2;
 	AI_asteroid_AnimationValue[0][index] = 1;
 	AI_asteroid_AnimationValue[1][index] = 0;

@@ -64,6 +64,7 @@ var keys = [false, false, false, false, false, false];
 	var sfx_asteroidExplode = new Howl({src:["./audio/sfx_asteroidExplode.wav","./audio/sfx_asteroidExplode.mp3"]});
 	var sfx_powerupGet = new Howl({src:["./audio/sfx_powerupGet.wav","./audio/sfx_powerupGet.mp3"],
 	buffer: true});
+	var sfx_shipCrash = new Howl({src:["./audio/sfx_shipCrash.wav"]});
 /**********************************************************************************************************************************************
 /************* Character Section **************************************************************************************************************
 /****																																	   ****
@@ -121,8 +122,11 @@ function Char_AddImpulse( x, y )
 function Char_Damage()
 { 
 	char_health--;
-	if(char_health<0)State_Game_ToEndGame();
-
+	if(char_health<0)
+	{
+		sfx_shipCrash.play();
+		State_Game_ToEndGame();
+	}
 }
 /**
 *@param {!AI_powerups} the type of powerup to be applied
@@ -1217,6 +1221,7 @@ function ToggleSFX()
 		sfx_asteroidExplode.volume(sfx_Volume);
 		sfx_shot.volume(sfx_Volume);
 		sfx_powerupGet.volume(sfx_Volume);
+		sfx_shipCrash.volume(sfx_Volume);
 	}
 	else
 	{
@@ -1226,6 +1231,7 @@ function ToggleSFX()
 		sfx_asteroidExplode.volume(sfx_Volume);
 		sfx_shot.volume(sfx_Volume);
 		sfx_powerupGet.volume(sfx_Volume);
+		sfx_shipCrash.volume(sfx_Volume);
 	}
 }
 function ToggleMusic()
@@ -1246,13 +1252,6 @@ function ToggleMusic()
 		music_inGame.volume(music_Volume); 
 		music_endGame.volume(music_Volume);
 		music_splash.volume(music_Volume);
-		// switch( State_gameState )
-		// {
-			// case State_gameStates.PREGAME : music_inGame.volume(music_Volume); break;
-			// case State_gameStates.GAME : music_inGame.volume(music_Volume); break;
-			// case State_gameStates.ENDGAME : music_endGame.volume(music_Volume); break;
-			// case State_gameStates.START : music_splash.volume(music_Volume); break;
-		// };
 	}
 }
 /**********************************************************************************************************************************************

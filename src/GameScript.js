@@ -291,13 +291,13 @@ function Char_Update()
 
 function Char_DrawCharacter()
 {
-//Modify The Sample position Based upon Which Keys are Pressed
+	//Modify The Sample position Based upon Which Keys are Pressed
 	var spriteIteratorX = twk_char_drawBox[0];
 	var spriteIteratorY = twk_char_drawBox[1];
 	var sourceX = 0;
 	var sourceY = spriteIteratorY;
 	char_animTimer += (2/fps);
-	if(keys[2])
+	if(keys[2]) //go faster button changes the sprites to the go faster ones
 	{
 		sourceX += (3*spriteIteratorX);
 		char_animTimer += (2/fps);
@@ -350,7 +350,6 @@ function Char_DrawBullets()
 	{
 		if( twk_char_bullets_Active[index] )
 		{
-			//ADD TIME TO LIVE // We Don't need 10
 			ctx.drawImage( 	char_bullets_gfx_bulletImage,
 							char_bullets_Currentanim * sampleSize[0], 0,
 							sampleSize[0],	sampleSize[1],				   
@@ -421,10 +420,10 @@ function AI_Init()
 }
 /**
  * This function will spawn a powerup on a random side of the canvas and point it at a random point on the opposite side of the canvas
+ * The type of powerup selected is equally weighted between the available options. 
  */
 function AI_SpawnPowerup()
 {
-	//TODO different powerup types
 	var powerupSelect = Math.random();
 	if(powerupSelect>0.33)
 	{
@@ -476,7 +475,9 @@ function AI_getRandomCoordinate(fromZeroTo)
 	return fromZeroTo * Math.random();
 }
 /**
- * If the powerup is active and within the bounds of the canvas this function will move it along its vector
+ * If the powerup is active and within the bounds of the canvas this function will move it along its vector.
+ * If the powerup leaves the bounds of the game, it will despawn
+ * if the SUPERPHYSICS flag is on, the trajectory will curve into the -Y axis.
  */
 function AI_powerup_update()
 {
@@ -515,6 +516,9 @@ function AI_powerup_update()
 		}
 	}
 }
+/**
+* Plays the sfx for the powerup, despawns the powerup and applies the powerup to the player
+*/
 function AI_onPowerupGet()
 {
 	sfx_powerupGet.play();
@@ -522,6 +526,10 @@ function AI_onPowerupGet()
 	AI_powerup_exists = false;
 	Char_applyPowerup(AI_powerup);
 }
+/**
+* This function spawns the asteroid for the given index at a random position along the X-axis at the top of the screen.
+* @param {!index} the index of the asteroid to be spawned
+*/
 function AI_SpawnAsteroid( index )
 {
 	// make the init values tweakable
@@ -547,6 +555,10 @@ function AI_SpawnAsteroid( index )
 	AI_astroid_Scales[index] = Math.random() * (twk_AI_asteroid_MinMaxScales[1] - twk_AI_asteroid_MinMaxScales[0]) + twk_AI_asteroid_MinMaxScales[0];
 }          
 
+/**
+* This function moves the asteroids down the game space and despawns them when they are out of bounds
+* @param {!index} the index of the asteroid to be updated
+*/
 function AI_UpdateSingleAsteroid( index )
 {
 	if( AI_asteroid_positions[1][index] < canvas.height + 50 )
@@ -558,7 +570,9 @@ function AI_UpdateSingleAsteroid( index )
 		AI_asteroid_active[index] = 0;
 	}
 }
-
+/**
+* On Asteroid death, this function is called to play the SFX and to set the asteroid state to start its death animation
+*/
 function AI_OnAsteroidDestroyed( index ) 
 {
 	sfx_asteroidExplode.play();
@@ -566,11 +580,14 @@ function AI_OnAsteroidDestroyed( index )
 	AI_asteroid_AnimationValue[0][index] = 1;
 	AI_asteroid_AnimationValue[1][index] = 0;
 }
-
+/**
+* I have no idea
+*/
 function AI_AsteroidUpdate()
 {
 	//Update Positions
-	var canSpawnNewAsteroid = -1;	var canSpawnNewAsteroid2 = -1;
+	var canSpawnNewAsteroid = -1;	
+	var canSpawnNewAsteroid2 = -1;
 	for( var index = 0; index < 5; ++index )
 	{
 		//TODO remove This
@@ -591,7 +608,6 @@ function AI_AsteroidUpdate()
 			canSpawnNewAsteroid2 = index;
 		}
 	}
-
 	//update timer
 	if( canSpawnNewAsteroid > -1 )
 	{
@@ -612,7 +628,9 @@ function AI_Update()
 	AI_AsteroidUpdate();
 	AI_powerup_update();
 }
-
+/**
+* When a powerup is on screen, this function draws the respective image for it
+*/
 function AI_powerup_DrawPowerup()
 {
 	if(AI_powerup_exists)
@@ -635,11 +653,11 @@ function AI_Asteroid_DrawAsteroid()
 		}
 	}	
 }
-
+/**
+* This function draws an individual asteroid. If the asteroid has been destroyed (if AI_asteroid active[index] = 2), it will iterate through the death animation sprite.
+*/
 function AI_Asteroid_DrawSingle_Asteroid( index )
 {
-	//Update Animation
-	//Update Anims 
 	if( AI_asteroid_active[index] == 2 )
 	{
 		if( AI_asteroid_AnimationValue[0][index] < 7 )
@@ -651,16 +669,13 @@ function AI_Asteroid_DrawSingle_Asteroid( index )
 			}
 		}
 	}
-	//5 * 6 82 * 82 COMET POS IS 3,5
-	//Hard Coded Shit should be made Not Hard Coded
-	//"Fuck it" - Rob
 	var SpriteSize = [410 , 492]
 	var newHitBox = [0,0];
 	newHitBox[0] = twk_AI_asteroid_hitBox[0] * AI_astroid_Scales[index]; 
 	newHitBox[1] = twk_AI_asteroid_hitBox[1] * AI_astroid_Scales[index];
 
 	var SpritePos = [ 2 * newHitBox[0], 4 * newHitBox[1]];	
-	var SourceX = SpriteSize[0] * AI_asteroid_AnimationValue[0][index];//AI_asteroid_AnimationValue[index];
+	var SourceX = SpriteSize[0] * AI_asteroid_AnimationValue[0][index];
 	
 	//Draw Image
 	ctx.drawImage( AI_asteroid_gfx_asteroidImage,
@@ -673,7 +688,7 @@ function AI_Asteroid_DrawSingle_Asteroid( index )
 /************* SCORE METHODS ******************************************************************************************************************
 /****																																	   ****
 /*********************************************************************************************************************************************/
-var score_currentScore = 0;//Needs Init
+var score_currentScore = 0;
 
 var twk_score_scorePerFrame = 2;
 var twk_score_asteroidKilled = 50;
@@ -706,7 +721,10 @@ function InitGame()
 	AI_Init();
 	score_Init();
 }
-
+/**
+* This function is responsible for gradually increasing the difficulty level of the game over time.
+* It does this by increasing the spawn rate and speed of asteroids.
+*/
 function UpdateLevelTimer()
 {
 	//Every 10 seconds, the asteroids start moving faster

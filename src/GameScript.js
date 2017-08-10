@@ -72,6 +72,8 @@ var keys = [false, false, false, false, false, false];
 
 //Starship Variables
 var twk_char_hitBox = [57, 88];
+var twk_char_drawBox = [57,176]; //Drawbox is bigger as it contains rocket exhaust
+var char_animTimer = 0;
 var twk_char_maxSpeed = [10, 10];
 var twk_char_dampeningValue = 20;
 
@@ -112,6 +114,7 @@ function Char_Init()
 	char_position[0] = (canvas.width/2);
 	char_position[1] = (canvas.height - twk_char_bullet_hitBox[1] - 10);
 	char_health = 0;
+	char_animTimer = 0;
 	//Reset Bullets
 	twk_char_bullets_Active = [false,false,false,false,false,false,false,false,false,false];	
 }
@@ -268,27 +271,55 @@ function Char_Update()
 function Char_DrawCharacter()
 {
 //Modify The Sample position Based upon Which Keys are Pressed
-	var sourceX = twk_char_hitBox[0];
+	var spriteIteratorX = twk_char_drawBox[0];
+	var spriteIteratorY = twk_char_drawBox[1];
+	var sourceX = 0;
+	var sourceY = spriteIteratorY;
+	char_animTimer += (2/fps);
+	if(keys[2])
+	{
+		sourceX += (3*spriteIteratorX);
+		char_animTimer += (2/fps);
+	}
 	if( keys[0] ) 
 	{ 
 		if( !keys[1] )
 		{
-			sourceX = 0;
+			sourceY = 0;
 		}
 	}
 	else 
 	{
 		if( keys[1] )
 		{
-			sourceX += twk_char_hitBox[0];
+			sourceY += spriteIteratorY;
 		}
+	}
+	//Cycle through the three ship animation sprites
+	if(char_animTimer<1)
+	{
+		if(char_animTimer<0.33)
+		{
+		}
+		else if(char_animTimer<0.66)
+		{
+			sourceX += (spriteIteratorX);
+		}
+		else
+		{
+			sourceX += (spriteIteratorX*2);
+		}
+	}
+	else
+	{
+		char_animTimer = 0;
 	}
 
 	ctx.drawImage( char_gfx_characterSprite,
-				   sourceX,0,
-				   twk_char_hitBox[0], twk_char_hitBox[1],				   
+				   sourceX,sourceY,
+				   twk_char_drawBox[0], twk_char_drawBox[1],				   
 				   char_position[0], char_position[1], 
-				   twk_char_hitBox[0], twk_char_hitBox[1]);	
+				   twk_char_drawBox[0], twk_char_drawBox[1]);	
 }
 
 function Char_DrawBullets()

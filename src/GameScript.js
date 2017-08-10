@@ -80,6 +80,8 @@ var char_playerImpulse = [0, 0];
 var char_currentSpeed = [0, 0];
 var char_position = [0, 0];
 var char_health = 0;
+var gfx_char_health = new Image();
+var gfx_char_health_box = [34,50];
 
 var char_gfx_characterSprite = new Image();//Make this a Sprite
 
@@ -137,7 +139,7 @@ function Char_applyPowerup(p)
 	switch(p)
 	{
 		case 0:break;
-		case 1:char_health++;break;
+		case 1:if(char_health<9)char_health++;break;
 		case 2:break;
 	}
 }
@@ -1275,10 +1277,10 @@ function InitGraphics()
 	AI_asteroid_gfx_asteroidImage.src = "./img/Sprite_asteroid.png";
 	AI_powerup_gfx_powerupImage.src = "./img/Image_powerup.png";
 	cutscene_gfx_stormImage.src = "./img/bgImage_Storm.png";
+	gfx_char_health.src="./img/Image_charHealth.png";
 	
 	gfx_sfx_togglePosition = [10, (canvas.height - sfx_toggleButtonBox[1]) - 10];
 	gfx_music_togglePosition = [10, (canvas.height - (2*music_toggleButtonBox[1])) - 20];
-	
 	
 }
 
@@ -1352,8 +1354,17 @@ function DrawUI()
 	ctx.font = "20px KulminoituvaRegular";
 	ctx.fillText("Score :", canvas.width - 120, (canvas.height - 65));
 	ctx.fillText(score_currentScore, canvas.width - 100, (canvas.height - 40));
-	ctx.fillText("Health :", canvas.width - 180, (canvas.height - 65));
-	ctx.fillText(char_health, canvas.width - 160, (canvas.height - 40));
+	if(char_health>0)
+	{
+		ctx.drawImage(gfx_char_health,canvas.width-160, (canvas.height-80),gfx_char_health_box[0],gfx_char_health_box[1]);
+		OutPutString = char_health;
+		XPos = (canvas.width-160)+(gfx_char_health_box[0]/2); //the centre of the health box
+		YPos = (canvas.height-80)+(gfx_char_health_box[1]/1.8);
+		ctx.font="20px Helvetica";
+		
+		XPos -= (ctx.measureText(OutPutString).width/2);
+		ctx.fillText(OutPutString, XPos, YPos);
+	}
 }
 
 function DrawScene()

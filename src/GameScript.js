@@ -26,6 +26,7 @@ var gfx_background_YLocation = 0;
 var gfx_backgroundParallax_YLocation = 0;
 var gfx_backgroundImgParallaxForeground_YLocation = 0;
 var twk_gfx_background_ScrollSpeed = 5;
+var gfx_background_start_ScrollSpeed = 5;
 
 //Input Keys : [Left, Right, Up, Down, Space, Enter]
 var keys = [false, false, false, false, false, false];
@@ -718,6 +719,7 @@ function UpdateLevelTimer()
 	    if(twk_AI_asteroid_minimumSpawnTime>0)twk_AI_asteroid_minimumSpawnTime -= 0.05;
 		//State_Game_ToEndGame();
 	}
+	
 }
 
 function updateInputs()
@@ -803,6 +805,7 @@ function CheckCollisions()
 
 function gameUpdate()
 {
+	
 	updateInputs();
 	Char_Update();
 	AI_Update();
@@ -834,6 +837,14 @@ function InitPreGame()
 
 function UpdatePreGameCountDown()
 {
+	if(twk_gfx_background_ScrollSpeed<gfx_background_start_ScrollSpeed)
+	{
+		twk_gfx_background_ScrollSpeed += (gfx_background_start_ScrollSpeed/fps); //back to full speed in one second
+	}
+	else
+	{
+		twk_gfx_background_ScrollSpeed = gfx_background_start_ScrollSpeed;
+	}
 	preGame_CountDownTimer -= (1/fps);
 	if( preGame_CountDownTimer <= 0 )
 	{
@@ -990,6 +1001,15 @@ function InitEndGame()
 
 function UpdateEndGame()
 {
+	if(twk_gfx_background_ScrollSpeed>0)
+	{
+		twk_gfx_background_ScrollSpeed -= (1/fps);
+	}
+	else
+		
+	{
+		twk_gfx_background_ScrollSpeed = 0;
+	}
 	//Is Ship ready
 	if( !EndGame_playOutroClip )
 	{
@@ -1373,12 +1393,12 @@ function DrawBackground()
 	{
 		gfx_background_YLocation -= canvas.height;
 	}
-	gfx_backgroundParallax_YLocation += twk_gfx_background_ScrollSpeed + 2;
+	gfx_backgroundParallax_YLocation += twk_gfx_background_ScrollSpeed;
 	if( gfx_backgroundParallax_YLocation > canvas.height )
 	{
 		gfx_backgroundParallax_YLocation -= canvas.height;
 	}
-	gfx_backgroundImgParallaxForeground_YLocation += twk_gfx_background_ScrollSpeed + 13;
+	gfx_backgroundImgParallaxForeground_YLocation += twk_gfx_background_ScrollSpeed*4;
 	if( gfx_backgroundImgParallaxForeground_YLocation > canvas.height )
 	{
 		gfx_backgroundImgParallaxForeground_YLocation -= canvas.height;

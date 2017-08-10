@@ -96,6 +96,7 @@ var twk_char_bullet_hitBox = [30, 60];
 var twk_char_bullet_cooldown  = 1;
 var char_bullet_cooldown_timer = 0;
 var twk_char_bullet_FrameSwitch = 0.5;
+var char_rapidfire_powerup_timer = 0;
 
 var twk_char_bullets_position = [];  
 twk_char_bullets_position[0] = [0,0,0,0,0,0,0,0,0,0];//REMOVE TWK
@@ -115,6 +116,8 @@ function Char_Init()
 	char_position[1] = (canvas.height - twk_char_bullet_hitBox[1] - 10);
 	char_health = 0;
 	char_animTimer = 0;
+	char_rapidfire_powerup_timer = 0;
+	twk_char_bullet_cooldown  = 1;
 	//Reset Bullets
 	twk_char_bullets_Active = [false,false,false,false,false,false,false,false,false,false];	
 }
@@ -138,12 +141,20 @@ function Char_Damage()
 */
 function Char_applyPowerup(p)
 {
-	//TODO this
+	p=0;
 	switch(p)
 	{
-		case 0:break;
-		case 1:if(char_health<9)char_health++;break;
-		case 2:break;
+		case 0:
+		for(var i = 0; i<AI_asteroid_active.length;i++)
+		{
+			if(AI_asteroid_active[i])
+			{
+				AI_OnAsteroidDestroyed(i);
+			}
+		}
+		break;
+		case 1:if(char_health<9)char_health++;break; //extra life
+		case 2:char_rapidfire_powerup_timer=5;twk_char_bullet_cooldown = 0.2;break; //for five seconds rapid fire
 	}
 }
 
@@ -172,6 +183,7 @@ function Char_RequestFireBullet()
 			char_bullet_cooldown_timer = twk_char_bullet_cooldown;
 		}
 	}
+	
 	
 	keys[4] = false;
 }
@@ -264,6 +276,15 @@ function Char_UpdateBullets()
 
 function Char_Update()
 {
+	if(char_rapidfire_powerup_timer>0)
+	{
+		char_rapidfire_powerup_timer -= (1/fps);
+	}
+	else
+	{
+		char_rapidfire_powerup_timer = 0;
+		twk_char_bullet_cooldown = 1;
+	}
 	Char_UpdateMovement();
 	Char_UpdateBullets();
 }
@@ -371,7 +392,7 @@ var AI_powerup_exists = false;
 var AI_powerup = 1;
 var AI_powerups = 
 {
-	INVUL: 0,
+	CLEAR_SCREEN: 0,
 	EXTRA_LIFE: 1,
 	EXTRA_SHOT: 2
 }
@@ -381,7 +402,9 @@ AI_asteroid_AnimationValue[0] = [0,0,0,0,0];
 AI_asteroid_AnimationValue[1] = [0,0,0,0,0];
 
 var AI_asteroid_gfx_asteroidImage = new Image();
-var AI_powerup_gfx_powerupImage = new Image();
+var AI_powerup_gfx_ShieldPowerupImage = new Image();
+var AI_powerup_gfx_RapidFirePowerupImage = new Image();
+var AI_powerup_gfx_ClearScreenPowerupImage = new Image();
 var AI_timer = 0;
 
 
@@ -402,7 +425,22 @@ function AI_Init()
 function AI_SpawnPowerup()
 {
 	//TODO different powerup types
-	AI_powerup = 1;
+	var powerupSelect = Math.random();
+	if(powerupSelect>0.33)
+	{
+		if(powerupSelect>0.66)
+		{
+			AI_powerup = 2;
+		}
+		else
+		{
+			AI_powerup = 1;
+		}
+	}
+	else
+	{
+		AI_powerup = 0;
+	}
 	//Determine which side and where the powerup will spawn from
 	var spawnPosition = [0,0];
 	var seedSpawnBorder = (Math.random() * 2)
@@ -579,7 +617,12 @@ function AI_powerup_DrawPowerup()
 {
 	if(AI_powerup_exists)
 	{
-		ctx.drawImage(AI_powerup_gfx_powerupImage,AI_powerup_position[0],AI_powerup_position[1],AI_powerup_hitBox[0],AI_powerup_hitBox[1]);
+		switch(AI_powerup)
+		{
+			case 0:ctx.drawImage(AI_powerup_gfx_ClearScreenPowerupImage,AI_powerup_position[0],AI_powerup_position[1],AI_powerup_hitBox[0],AI_powerup_hitBox[1]);break;
+			case 1:ctx.drawImage(AI_powerup_gfx_ShieldPowerupImage,AI_powerup_position[0],AI_powerup_position[1],AI_powerup_hitBox[0],AI_powerup_hitBox[1]);break;
+			case 2:ctx.drawImage(AI_powerup_gfx_RapidFirePowerupImage,AI_powerup_position[0],AI_powerup_position[1],AI_powerup_hitBox[0],AI_powerup_hitBox[1]);break;
+		}
 	}
 }
 function AI_Asteroid_DrawAsteroid()
@@ -1307,7 +1350,9 @@ function InitGraphics()
 	char_gfx_characterSprite.src = "./img/Sprite_spaceship.png";//"./img/Image_spaceship.png";
 	char_bullets_gfx_bulletImage.src = "./img/Image_spaceshipBullet.png";
 	AI_asteroid_gfx_asteroidImage.src = "./img/Sprite_asteroid.png";
-	AI_powerup_gfx_powerupImage.src = "./img/Image_powerup.png";
+	AI_powerup_gfx_ShieldPowerupImage.src = "./img/Image_powerup_shield.png";
+	AI_powerup_gfx_RapidFirePowerupImage.src = "./img/Image_powerup_rapidfire.png";
+	AI_powerup_gfx_ClearScreenPowerupImage.src = "./img/Image_powerup_clearscreen.png";
 	cutscene_gfx_stormImage.src = "./img/bgImage_Storm.png";
 	gfx_char_health.src="./img/Image_charHealth.png";
 	

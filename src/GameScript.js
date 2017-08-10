@@ -316,7 +316,7 @@ var twk_AI_asteroid_minimumSpawnTime = 0.5;//3;
 var twk_AI_asteroid_asteroidInitialSpawnTimer = 10; // Do this on Init 
 var twk_AI_asteroid_hitBox = [50, 50];
 var twk_AI_asteroid_explosionAnimTimer = 0.075;
-var twk_AI_asteroid_MinMaxScales = [0.75,1.5];
+var twk_AI_asteroid_MinMaxScales = [0.75,2];
 
 var AI_asteroid_animTimer = 0;
 var AI_asteroid_active = [0,0,0,0,0];//0-Inactive,1-Active,2-Dead
@@ -362,6 +362,7 @@ function AI_Init()
 	AI_asteroid_active = [0,0,0,0,0];
 	twk_AI_asteroid_minimumSpawnTime = 0.5;
 	AI_asteroid_spawnCounter = twk_AI_asteroid_minimumSpawnTime;
+	AI_powerup_initialSpawnTimer=10;
 	AI_timer = 0;
 }
 /**
@@ -547,7 +548,7 @@ function AI_powerup_DrawPowerup()
 {
 	if(AI_powerup_exists)
 	{
-		ctx.drawImage(AI_powerup_gfx_powerupImage,AI_powerup_position[0],AI_powerup_position[1]);
+		ctx.drawImage(AI_powerup_gfx_powerupImage,AI_powerup_position[0],AI_powerup_position[1],AI_powerup_hitBox[0],AI_powerup_hitBox[1]);
 	}
 }
 function AI_Asteroid_DrawAsteroid()

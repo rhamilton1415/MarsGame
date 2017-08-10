@@ -141,7 +141,6 @@ function Char_Damage()
 */
 function Char_applyPowerup(p)
 {
-	p=0;
 	switch(p)
 	{
 		case 0:

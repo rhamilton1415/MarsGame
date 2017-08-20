@@ -7,5 +7,5 @@
 }
 @font-face {
     font-family: 'nasalization';
-    src: ('fonts/nasalization-rg.ttf');
+    src: url('fonts/nasalization-rg.ttf');
 }

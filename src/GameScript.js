@@ -41,10 +41,6 @@ var keys = [false, false, false, false, false, false];
 	var sfx_On = true; //use as volume meter
 	var sfx_Volume = 1; //keep normalised
 	
-	var gfx_music_toggleOnImg = new Image();
-	var gfx_music_toggleOffImg = new Image();
-	music_toggleButtonBox = [50,50];
-	var gfx_music_togglePosition = [0,0];
 	var music_On = true;
 	var music_Volume = 1;
 	
@@ -185,7 +181,7 @@ function Char_RequestFireBullet()
 	}
 	
 	
-	keys[4] = false;
+	//keys[4] = false;
 }
 
 function Char_UpdateMovement()
@@ -892,7 +888,7 @@ function DrawPreGame()
 	
 	//Draw
 	ctx.fillStyle = "#DAF7A6";
-	ctx.font="60px Helvetica";
+	ctx.font="60px nasalization";
 	ctx.fillText(OutPutString, Xpos, (canvas.height/2));
 	
 }
@@ -975,7 +971,7 @@ function DrawStart()
 	OutPutString = "PRESS ENTER TO START";
 	XPos = canvas.width/2;
 	ctx.fillStyle = ((Start_textFlicker) ? "#C20E00" : "#DAF7A6");
-	ctx.font="40px Helvetica";
+	ctx.font="40px nasalization";
 	XPos -= (ctx.measureText(OutPutString).width/2);
 	ctx.fillText(OutPutString, XPos, (canvas.height/2)+280)
 }
@@ -1154,7 +1150,7 @@ function DrawEndGame()
 	    var XPos = canvas.width/2;
 		var OutPutString = "GAME OVER";
 	    ctx.fillStyle = "#DAF7A6";
-	    ctx.font="60px Helvetica";
+	    ctx.font="60px nasalization";
 	    XPos -= (ctx.measureText(OutPutString).width/2); //The offset is set to half the size of the string in pixels, centering it
 	    ctx.fillText(OutPutString, XPos, (canvas.height/2)-50);
 		//add a little artistic flair - "Score" display delayed by a second
@@ -1169,7 +1165,7 @@ function DrawEndGame()
 			OutPutString = "SCORE: " + Math.round(EndGame_scoreAnimationSubScore);
 			XPos = canvas.width/2;
 			ctx.fillStyle = "#DAF7A6";
-			ctx.font="40px Helvetica";
+			ctx.font="40px nasalization";
 			XPos -= (ctx.measureText(OutPutString).width/2);
 			ctx.fillText(OutPutString, XPos, (canvas.height/2)+250);
 		}
@@ -1187,26 +1183,18 @@ function DrawEndGame()
 			OutPutString = "SCORE: " + score_currentScore;
 			XPos = canvas.width/2;
 			ctx.fillStyle = "#DAF7A6";
-			ctx.font="40px Helvetica";
+			ctx.font="40px nasalization";
 			XPos -= (ctx.measureText(OutPutString).width/2);
 			ctx.fillText(OutPutString, XPos, (canvas.height/2)+250)
 			
 			//Print Option one
-			OutPutString = "PLAY AGAIN?";
+			OutPutString = "PRESS ENTER TO PLAY AGAIN";
 			XPos = canvas.width/2;
 			ctx.fillStyle = ((EndGame_menuSubState == EndGame_menuSubStates.START_OVER && EndGame_optionFlicker) ? "#C20E00" : "#DAF7A6");
 			//ctx.fillStyle = "#DAF7A6";
-			ctx.font="40px Helvetica";
+			ctx.font="40px nasalization";
 			XPos -= (ctx.measureText(OutPutString).width/2);
 			ctx.fillText(OutPutString, XPos, (canvas.height/2));
-			
-			//Print an option
-			OutPutString = "SAVE HIGH-SCORE";
-			XPos = canvas.width/2;
-			ctx.fillStyle = ((EndGame_menuSubState == EndGame_menuSubStates.POST_SCORE && EndGame_optionFlicker) ? "#C20E00" : "#DAF7A6");
-			ctx.font="40px Helvetica";
-			XPos -= (ctx.measureText(OutPutString).width/2);
-			ctx.fillText(OutPutString, XPos, (canvas.height/2)+50);
 		}
 	}
 	
@@ -1222,8 +1210,7 @@ function UI_init()
 	//Clickable format = [box[minx,miny,maxx,maxy],function onBoxClick()] hacky and shit sorry i didn't want it to be this way
 	clickables = 
 	[
-		[[gfx_sfx_togglePosition[0], gfx_sfx_togglePosition[1], gfx_sfx_togglePosition[0]+sfx_toggleButtonBox[0], gfx_sfx_togglePosition[1]+sfx_toggleButtonBox[1]],function(){ToggleSFX();}], //sfx toggle box
-		[[gfx_music_togglePosition[0], gfx_music_togglePosition[1], (gfx_music_togglePosition[0]+music_toggleButtonBox[0]), (gfx_music_togglePosition[1]+music_toggleButtonBox[1])],function(){ToggleMusic();}] //music toggle box
+		[[gfx_sfx_togglePosition[0], gfx_sfx_togglePosition[1], gfx_sfx_togglePosition[0]+sfx_toggleButtonBox[0], gfx_sfx_togglePosition[1]+sfx_toggleButtonBox[1]],function(){ToggleSFX();}] //sfx toggle box
 	];
 }
 function UI_Update()
@@ -1336,6 +1323,12 @@ function ToggleSFX()
 		sfx_shot.volume(sfx_Volume);
 		sfx_powerupGet.volume(sfx_Volume);
 		sfx_shipCrash.volume(sfx_Volume);
+		
+		music_On = false;
+		music_Volume = 0;
+		music_inGame.volume(music_Volume);
+		music_endGame.volume(music_Volume);
+		music_splash.volume(music_Volume);
 	}
 	else
 	{
@@ -1346,21 +1339,7 @@ function ToggleSFX()
 		sfx_shot.volume(sfx_Volume);
 		sfx_powerupGet.volume(sfx_Volume);
 		sfx_shipCrash.volume(sfx_Volume);
-	}
-}
-function ToggleMusic()
-{
-	if(music_On)
-	{
-		music_On = false;
-		music_Volume = 0;
-		InitSFX();
-		music_inGame.volume(music_Volume);
-		music_endGame.volume(music_Volume);
-		music_splash.volume(music_Volume);
-	}
-	else
-	{
+		
 		music_On = true;
 		music_Volume = 1;
 		music_inGame.volume(music_Volume); 
@@ -1377,8 +1356,6 @@ function InitGraphics()
 {
 	gfx_sfx_toggleOnImg.src = "./img/Image_SFXToggleOn.png";
 	gfx_sfx_toggleOffImg.src = "./img/Image_SFXToggleOff.png";
-	gfx_music_toggleOnImg.src = "./img/Image_SFXToggleOn.png";
-	gfx_music_toggleOffImg.src = "./img/Image_SFXToggleOff.png";
 	
 	gfx_splashImg.src = "./img/bgImage_splash.png";
 	gfx_backgroundImg.src = "./img/bgImage_space.png"; //does this cache can we speed this up
@@ -1394,7 +1371,6 @@ function InitGraphics()
 	gfx_char_health.src="./img/Image_charHealth.png";
 	
 	gfx_sfx_togglePosition = [10, (canvas.height - sfx_toggleButtonBox[1]) - 10];
-	gfx_music_togglePosition = [10, (canvas.height - (2*music_toggleButtonBox[1])) - 20];
 	
 }
 
@@ -1447,14 +1423,6 @@ function DrawSFXToggle()
 	{
 		ctx.drawImage(gfx_sfx_toggleOffImg,gfx_sfx_togglePosition[0],gfx_sfx_togglePosition[1],sfx_toggleButtonBox[0],sfx_toggleButtonBox[1]);
 	}
-	if(music_On)
-	{
-		ctx.drawImage(gfx_sfx_toggleOnImg,gfx_music_togglePosition[0],gfx_music_togglePosition[1],sfx_toggleButtonBox[0],sfx_toggleButtonBox[1]);
-	}
-	else
-	{
-		ctx.drawImage(gfx_sfx_toggleOffImg,gfx_music_togglePosition[0],gfx_music_togglePosition[1],sfx_toggleButtonBox[0],sfx_toggleButtonBox[1]);
-	}
 }
 function DrawUI()
 {
@@ -1463,9 +1431,9 @@ function DrawUI()
     ctx.fillRect(50, (canvas.height - 50),25,25);
 	
 	ctx.fillStyle = "#DAF7A6";
-	ctx.font = "20px KulminoituvaRegular";
+	ctx.font = "20px nasalization";
 	ctx.fillText("Weapon Ready",20, (canvas.height - 65));
-	ctx.font = "20px KulminoituvaRegular";
+	ctx.font = "20px nasalization";
 	ctx.fillText("Score :", canvas.width - 120, (canvas.height - 65));
 	ctx.fillText(score_currentScore, canvas.width - 100, (canvas.height - 40));
 	if(char_health>0)
@@ -1474,7 +1442,7 @@ function DrawUI()
 		OutPutString = char_health;
 		XPos = (canvas.width-160)+(gfx_char_health_box[0]/2); //the centre of the health box
 		YPos = (canvas.height-80)+(gfx_char_health_box[1]/1.8);
-		ctx.font="20px Helvetica";
+		ctx.font="20px nasalization";
 		
 		XPos -= (ctx.measureText(OutPutString).width/2);
 		ctx.fillText(OutPutString, XPos, YPos);
@@ -1536,7 +1504,7 @@ function changeKey(e, flag)
 		case 87: case 38: keys[2] = flag; break; // up
 		case 68: case 39: keys[1] = flag; break; // right
 		case 83: case 40: keys[3] = flag; break; // down
-		case 32: 		  keys[4] = flag;if( flag == 1 && past != flag ){trigger = true;} break;  // space
+		case 32: 		  keys[4] = flag;break;//if( flag == 1 && past != flag ){trigger = true;} break;  // space TODO work out what tf sam was on about here
 		case 13:          keys[5] = flag; break; //enter
 		case 1:           UI_LeftClick(e); break; //left click
 	}

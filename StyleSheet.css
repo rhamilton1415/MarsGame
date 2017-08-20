@@ -6,6 +6,8 @@
 	left: 50%;
 }
 @font-face {
-    font-family: 'nasalization';
-    src: url('fonts/nasalization-rg.ttf');
+    font-family: 'nasalizationf';
+    src: url('fonts/nasalization-rg-webfont.woff2') format('woff2'),
+         url('fonts/nasalization-rg-webfont.woff') format('woff');
+
 }

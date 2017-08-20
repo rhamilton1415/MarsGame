@@ -888,7 +888,7 @@ function DrawPreGame()
 	
 	//Draw
 	ctx.fillStyle = "#DAF7A6";
-	ctx.font="60px nasalization";
+	ctx.font="60px nasalizationF";
 	ctx.fillText(OutPutString, Xpos, (canvas.height/2));
 	
 }
@@ -971,7 +971,7 @@ function DrawStart()
 	OutPutString = "PRESS ENTER TO START";
 	XPos = canvas.width/2;
 	ctx.fillStyle = ((Start_textFlicker) ? "#C20E00" : "#DAF7A6");
-	ctx.font="40px nasalization";
+	ctx.font="40px nasalizationF";
 	XPos -= (ctx.measureText(OutPutString).width/2);
 	ctx.fillText(OutPutString, XPos, (canvas.height/2)+280)
 }
@@ -1150,7 +1150,7 @@ function DrawEndGame()
 	    var XPos = canvas.width/2;
 		var OutPutString = "GAME OVER";
 	    ctx.fillStyle = "#DAF7A6";
-	    ctx.font="60px nasalization";
+	    ctx.font="60px nasalizationF";
 	    XPos -= (ctx.measureText(OutPutString).width/2); //The offset is set to half the size of the string in pixels, centering it
 	    ctx.fillText(OutPutString, XPos, (canvas.height/2)-50);
 		//add a little artistic flair - "Score" display delayed by a second
@@ -1165,7 +1165,7 @@ function DrawEndGame()
 			OutPutString = "SCORE: " + Math.round(EndGame_scoreAnimationSubScore);
 			XPos = canvas.width/2;
 			ctx.fillStyle = "#DAF7A6";
-			ctx.font="40px nasalization";
+			ctx.font="40px nasalizationF";
 			XPos -= (ctx.measureText(OutPutString).width/2);
 			ctx.fillText(OutPutString, XPos, (canvas.height/2)+250);
 		}
@@ -1183,7 +1183,7 @@ function DrawEndGame()
 			OutPutString = "SCORE: " + score_currentScore;
 			XPos = canvas.width/2;
 			ctx.fillStyle = "#DAF7A6";
-			ctx.font="40px nasalization";
+			ctx.font="40px nasalizationF";
 			XPos -= (ctx.measureText(OutPutString).width/2);
 			ctx.fillText(OutPutString, XPos, (canvas.height/2)+250)
 			
@@ -1192,7 +1192,7 @@ function DrawEndGame()
 			XPos = canvas.width/2;
 			ctx.fillStyle = ((EndGame_menuSubState == EndGame_menuSubStates.START_OVER && EndGame_optionFlicker) ? "#C20E00" : "#DAF7A6");
 			//ctx.fillStyle = "#DAF7A6";
-			ctx.font="40px nasalization";
+			ctx.font="40px nasalizationF";
 			XPos -= (ctx.measureText(OutPutString).width/2);
 			ctx.fillText(OutPutString, XPos, (canvas.height/2));
 		}
@@ -1431,9 +1431,9 @@ function DrawUI()
     ctx.fillRect(50, (canvas.height - 50),25,25);
 	
 	ctx.fillStyle = "#DAF7A6";
-	ctx.font = "20px nasalization";
+	ctx.font = "20px nasalizationF";
 	ctx.fillText("Weapon Ready",20, (canvas.height - 65));
-	ctx.font = "20px nasalization";
+	ctx.font = "20px nasalizationF";
 	ctx.fillText("Score :", canvas.width - 120, (canvas.height - 65));
 	ctx.fillText(score_currentScore, canvas.width - 100, (canvas.height - 40));
 	if(char_health>0)
@@ -1442,7 +1442,7 @@ function DrawUI()
 		OutPutString = char_health;
 		XPos = (canvas.width-160)+(gfx_char_health_box[0]/2); //the centre of the health box
 		YPos = (canvas.height-80)+(gfx_char_health_box[1]/1.8);
-		ctx.font="20px nasalization";
+		ctx.font="20px nasalizationF";
 		
 		XPos -= (ctx.measureText(OutPutString).width/2);
 		ctx.fillText(OutPutString, XPos, YPos);

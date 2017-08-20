@@ -36,7 +36,7 @@ var keys = [false, false, false, false, false, false];
 /*********************************************************************************************************************************************/
 	var gfx_sfx_toggleOnImg = new Image();
 	var gfx_sfx_toggleOffImg = new Image();
-	var sfx_toggleButtonBox = [50,50];
+	var sfx_toggleButtonBox = [30,30];
 	var gfx_sfx_togglePosition = [0,0]
 	var sfx_On = true; //use as volume meter
 	var sfx_Volume = 1; //keep normalised
@@ -274,6 +274,7 @@ function Char_Update()
 {
 	if(char_rapidfire_powerup_timer>0)
 	{
+		Char_RequestFireBullet(); //So that when the rapid fire powerup is on, you are always firing
 		char_rapidfire_powerup_timer -= (1/fps);
 	}
 	else

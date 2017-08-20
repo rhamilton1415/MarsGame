@@ -48,7 +48,7 @@ var keys = [false, false, false, false, false, false];
 	buffer: true,
 	loop: true
 	});
-	music_splash.on('pause',function(){music_splash.stop();});
+	//music_splash.on('pause',function(){music_splash.stop();});
 	var music_inGame = new Howl({src:["./audio/music_inGame.wav"],
 	buffer: true,
 	loop: true

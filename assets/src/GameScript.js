@@ -1117,14 +1117,14 @@ function UpdateEndGame()
 		{
 			if(EndGame_menuSubState > 0) 
 			{
-				EndGame_menuSubState--;
+				//EndGame_menuSubState--;
 			}
 		}
 		else if(keys[3]) //down
 		{
 			if(EndGame_menuSubState < Object.keys(EndGame_menuSubStates).length/2)
 			{
-				EndGame_menuSubState++;
+				//EndGame_menuSubState++;
 			}
 		}
 	}

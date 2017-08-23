@@ -1525,7 +1525,18 @@ function painter()
 document.onkeydown=function(e){changeKey((e||window.event), 1);}
 document.onkeyup=function(e){changeKey((e||window.event), 0);}
 document.onmousedown=function(e){UI_LeftClick(e);}
-
+if(window.DeviceOrientationEvent){
+  window.addEventListener("deviceorientation", orientation, false);
+}else{
+  console.log("DeviceOrientationEvent is not supported");
+}
+function orientation(event){
+  console.log("Magnetometer: "
+    + event.alpha + ", "
+    + event.beta + ", "
+    + event.gamma
+  );
+}
 window.onload=function()
 {
 	canvas = document.getElementById('game');

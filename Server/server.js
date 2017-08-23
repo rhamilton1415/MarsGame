@@ -8,7 +8,7 @@ app.get('/',(request,response)=>
 	response.send('hi');
 });
 
-
+app.use(express.static('..'))
 app.listen(port,(err) =>
 {
 	if(err)

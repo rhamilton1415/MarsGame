@@ -7,6 +7,7 @@
  */
 
  //// THREAD GRAPHICS AND UPDATE /////
+ 
 /**********************************************************************************************************************************************
 /************* Graphics Variables *************************************************************************************************************
 /****																																	   ****
@@ -15,9 +16,16 @@
 var canvas;
 var ctx;
 var fps = 60;
+
+//loading screen nonsense
+var gfx_loaded = true;
+var loadingInterval;
+var loadingTextFlicker = -1; //font needs to load wow
+
 var clickables =[];
 //Background Variables
 var gfx_splashImg = new Image();
+gfx_splashImg.onload = function() { go();  }
 var gfx_backgroundImg = new Image();
 var gfx_backgroundImgParallax = new Image();
 var gfx_backgroundImgParallaxForeground = new Image();
@@ -27,6 +35,7 @@ var gfx_backgroundParallax_YLocation = 0;
 var gfx_backgroundImgParallaxForeground_YLocation = 0;
 var twk_gfx_background_ScrollSpeed = 5;
 var gfx_background_start_ScrollSpeed = 5;
+
 
 //Input Keys : [Left, Right, Up, Down, Space, Enter]
 var keys = [false, false, false, false, false, false];
@@ -1391,16 +1400,8 @@ function InitGraphics()
 	AI_powerup_gfx_ShieldPowerupImage.src = "assets/img/Image_powerup_shield.png";
 	AI_powerup_gfx_RapidFirePowerupImage.src = "assets/img/Image_powerup_rapidfire.png";
 	AI_powerup_gfx_ClearScreenPowerupImage.src = "assets/img/Image_powerup_clearscreen.png";
-	cutscene_gfx_stormImage.src = "assets/img/bgImage_Storm.png";
 	gfx_char_health.src="assets/img/Image_charHealth.png";
-	
 	gfx_sfx_togglePosition = [10, (canvas.height - sfx_toggleButtonBox[1]) - 10];
-	
-}
-
-function DrawLightningStorm()
-{
-	ctx.drawImage(cutscene_gfx_stormImage, 0, cutscene_storm_Yposition, canvas.width, canvas.height);
 }
 
 function DrawBackground()
@@ -1556,11 +1557,41 @@ window.onload=function()
 {
 	canvas = document.getElementById('game');
 	ctx = canvas.getContext('2d');
-	setInterval(engineUpdate, 1000/fps);
 	UI_usingTouchAndAccel = is_touch_device();
 	InitGraphics();
 	InitSFX();
 	UI_init();
 	InitStart();
+	loadingInterval = setInterval(drawLoadingScreen, 500);
 	//State_Game_ToPreGame();
+}
+/**
+* Wait for the graphics - go() is only called when images are loaded
+*/
+function drawLoadingScreen()
+{
+	ctx.fillStyle = 'rgba(0,0,0,0)';
+	ctx.clearRect(0,0,600,800);
+	OutPutString = "LOADING";
+	XPos = canvas.width/2;
+	ctx.fillStyle = ("#DAF7A6");
+	ctx.font="40px nasalizationF";
+	XPos -= (ctx.measureText(OutPutString).width/2);
+	if(loadingTextFlicker<0)
+	{
+		ctx.fillText("", XPos, (canvas.height/2));
+		loadingTextFlicker++;
+		return;
+	}
+	for(var i = 0; i<loadingTextFlicker; i++)
+	{
+		OutPutString += ".";
+	}
+	(loadingTextFlicker>=3)?loadingTextFlicker=0:loadingTextFlicker++;
+	ctx.fillText(OutPutString, XPos, (canvas.height/2));
+}
+function go()
+{
+	clearInterval(loadingInterval);
+	setInterval(engineUpdate, 1000/fps);
 }

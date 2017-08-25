@@ -1205,6 +1205,7 @@ function DrawEndGame()
 /************* Global Input *******************************************************************************************************************
 /****																																	   ****
 /*********************************************************************************************************************************************/
+var UI_usingTouchAndAccel = false;
 //input handling outside of game logic
 function UI_init()
 {
@@ -1213,6 +1214,13 @@ function UI_init()
 	[
 		[[gfx_sfx_togglePosition[0], gfx_sfx_togglePosition[1], gfx_sfx_togglePosition[0]+sfx_toggleButtonBox[0], gfx_sfx_togglePosition[1]+sfx_toggleButtonBox[1]],function(){ToggleSFX();}] //sfx toggle box
 	];
+	if(UI_usingTouchAndAccel)
+	{
+		document.body.addEventListener('touchstart', function(e)
+		{
+			alert(e.changedTouches[0].pageX) // alert pageX coordinate of touch point
+		}, false)
+	}
 }
 function UI_Update()
 {
@@ -1525,24 +1533,16 @@ function painter()
 document.onkeydown=function(e){changeKey((e||window.event), 1);}
 document.onkeyup=function(e){changeKey((e||window.event), 0);}
 document.onmousedown=function(e){UI_LeftClick(e);}
-if(window.DeviceOrientationEvent){
-  window.addEventListener("deviceorientation", orientation, false);
-}else{
-  console.log("DeviceOrientationEvent is not supported");
-}
-function orientation(event){
-  console.log("Magnetometer: "
-    + event.alpha + ", "
-    + event.beta + ", "
-    + event.gamma
-  );
-}
+function is_touch_device() {
+  return 'ontouchstart' in window        // works on most browsers 
+      || navigator.maxTouchPoints;       // works on IE10/11 and Surface
+};
 window.onload=function()
 {
 	canvas = document.getElementById('game');
 	ctx = canvas.getContext('2d');
 	setInterval(engineUpdate, 1000/fps);
-	
+	UI_usingTouchAndAccel = is_touch_device();
 	InitGraphics();
 	InitSFX();
 	UI_init();

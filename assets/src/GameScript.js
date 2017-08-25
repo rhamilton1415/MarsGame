@@ -1533,13 +1533,13 @@ function changeKey(e, flag)
 	switch (e.keyCode)
 	{
 		//0, 2, 1, 3, 4 god fucking dammit sam
-		case 65: case 37: keys[0] = flag; break; // left
-		case 87: case 38: keys[2] = flag; break; // up
-		case 68: case 39: keys[1] = flag; break; // right
-		case 83: case 40: keys[3] = flag; break; // down
-		case 32: 		  keys[4] = flag;break;//if( flag == 1 && past != flag ){trigger = true;} break;  // space TODO work out what tf sam was on about here
-		case 13:          keys[5] = flag; break; //enter
-		case 1:           UI_LeftClick(e); break; //left click
+		case 65: case 37: keys[0] = flag;e.preventDefault(); break; // left
+		case 87: case 38: keys[2] = flag;e.preventDefault(); break; // up
+		case 68: case 39: keys[1] = flag;e.preventDefault(); break; // right
+		case 83: case 40: keys[3] = flag;e.preventDefault(); break; // down
+		case 32: 		  keys[4] = flag;e.preventDefault();break;//if( flag == 1 && past != flag ){trigger = true;} break;  // space TODO work out what tf sam was on about here
+		case 13:          keys[5] = flag;e.preventDefault(); break; //enter
+		case 1:           UI_LeftClick(e);e.preventDefault(); break; //left click
 	}
 }
 

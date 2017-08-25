@@ -1514,10 +1514,18 @@ function DrawScene()
 /*********************************************************************************************************************************************/
 function engineUpdate()
 {
-	State_Update();
-	DrawScene();
-	UI_Update();
-	if( trigger == true ) { trigger = false; }
+    if ( document.hasFocus() ) 
+	{
+		Howler.volume(1);
+		State_Update();
+		DrawScene();
+		UI_Update();
+		if( trigger == true ) { trigger = false; }
+    }
+	else
+	{
+		Howler.volume(0);
+	}
 }
 
 function changeKey(e, flag)
@@ -1592,6 +1600,7 @@ function drawLoadingScreen()
 }
 function go()
 {
+	
 	clearInterval(loadingInterval);
 	setInterval(engineUpdate, 1000/fps);
 }

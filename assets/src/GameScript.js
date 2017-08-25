@@ -968,8 +968,9 @@ function UpdateStart()
 }
 function DrawStart()
 {
+	
 	ctx.drawImage(gfx_splashImg, 0, 0, canvas.width, canvas.height);
-	OutPutString = "PRESS ENTER TO START";
+	OutPutString = (UI_usingTouchAndAccel)?"TOUCH SCREEN TO START":"PRESS ENTER TO START";
 	XPos = canvas.width/2;
 	ctx.fillStyle = ((Start_textFlicker) ? "#C20E00" : "#DAF7A6");
 	ctx.font="40px nasalizationF";
@@ -1189,7 +1190,7 @@ function DrawEndGame()
 			ctx.fillText(OutPutString, XPos, (canvas.height/2)+250)
 			
 			//Print Option one
-			OutPutString = "PRESS ENTER TO PLAY AGAIN";
+			OutPutString = (UI_usingTouchAndAccel)?"TOUCH TO PLAY AGAIN":"PRESS ENTER TO PLAY AGAIN";
 			XPos = canvas.width/2;
 			ctx.fillStyle = ((EndGame_menuSubState == EndGame_menuSubStates.START_OVER && EndGame_optionFlicker) ? "#C20E00" : "#DAF7A6");
 			//ctx.fillStyle = "#DAF7A6";
@@ -1216,10 +1217,24 @@ function UI_init()
 	];
 	if(UI_usingTouchAndAccel)
 	{
+		//Listeners for touch start and touch end are only used if the device can handle it. If so, a touch is equivilent to a space and enter press
+		//In each of these functions, e is the event.
 		document.body.addEventListener('touchstart', function(e)
 		{
-			alert(e.changedTouches[0].pageX) // alert pageX coordinate of touch point
-		}, false)
+			keys[4] = 1; //space
+			keys[5] = 1; //enter
+		}, false);
+		document.body.addEventListener('touchend', function(e)
+		{
+			keys[4] = 0; //space
+			keys[5] = 0; //enter
+		}, false);
+		window.addEventListener("devicemotion", function(e)
+		{
+			//lol
+			//highest quality of jokes
+			Char_AddImpulse(-e.accelerationIncludingGravity.x, (e.accelerationIncludingGravity.y-6)*0.5);
+		}, false);
 	}
 }
 function UI_Update()
@@ -1534,8 +1549,8 @@ document.onkeydown=function(e){changeKey((e||window.event), 1);}
 document.onkeyup=function(e){changeKey((e||window.event), 0);}
 document.onmousedown=function(e){UI_LeftClick(e);}
 function is_touch_device() {
-  return 'ontouchstart' in window        // works on most browsers 
-      || navigator.maxTouchPoints;       // works on IE10/11 and Surface
+  return ('ontouchstart' in window        // works on most browsers 
+      || navigator.maxTouchPoints) && (window.DeviceMotionEvent);       // works on IE10/11 and Surface
 };
 window.onload=function()
 {
